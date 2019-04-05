@@ -239,9 +239,6 @@ installMagento() {
   # wait for MySQL to come up
   sleep 30
 
-  # set mode
-  executeInDocker  deploy:mode:set ${ENVIROMENT}
-
   # Install magento 2
   baseURLInsecure="http://${hostname}/"
   baseURLSecure="https://${hostname}/"
@@ -269,15 +266,18 @@ installMagento() {
   executeInDocker setup:upgrade
 
   # Clear cache
-  executeInDocker cache:clean
+  executeInDocker cache:flush
+
+  executeInDocker setup:static-content:deploy -f
+
+  executeInDocker setup:config:set ${ENVIROMENT}
 
   # Index data
   executeInDocker indexer:reindex
 
   # Print results
-  echo "\n"
-  echo "Installation complete.\n"
-
+  echo "the enviroment is ${ENVIROMENT} \n"
+  echo "Installation complete. \n"
   printf "%-15s%-30s\n" "Frontend" $baseURLInsecure
   printf "%-15s%-30s\n" "Backend" $backendURL
   printf "%-15s%s: %s\n" "" "Username" ${ADMIN_USERNAME}
