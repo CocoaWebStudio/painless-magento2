@@ -265,12 +265,14 @@ installMagento() {
   # Install and update modules
   executeInDocker setup:upgrade
 
+  # Set enviroment
+  executeInDocker deploy:mode:set ${ENVIROMENT}
+
   # Clear cache
   executeInDocker cache:flush
 
+  # Deploy static content
   executeInDocker setup:static-content:deploy -f
-
-  executeInDocker setup:config:set ${ENVIROMENT}
 
   # Index data
   executeInDocker indexer:reindex
