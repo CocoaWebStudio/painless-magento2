@@ -6,10 +6,6 @@ ARG ENVIROMENT=production
 RUN addgroup -g 3000 -S ${WEB_USER}
 RUN adduser -u 3000 -S -D -G ${WEB_USER} ${WEB_USER}
 
-# Start updating packages
-RUN apk update 
-
-# persistent / runtime deps
 ENV PHPIZE_DEPS \
   autoconf \
   cmake \
@@ -27,6 +23,11 @@ ENV PHPIZE_DEPS \
   libpng-dev  \
   libjpeg-turbo-dev
 
+ENV RABBITMQ_VERSION v0.9.0
+
+ENV PHP_REDIS_VERSION 4.2.0
+
+# persistent / runtime deps
 RUN apk add --no-cache --virtual .persistent-deps \
   automake \
   # for intl extension
@@ -52,15 +53,12 @@ RUN apk add --no-cache --virtual .persistent-deps \
   patch \
   perl \
   shadow \
-  ssmtp
-
+  ssmtp \
 # workaround for rabbitmq linking issue
-RUN set -xe && ln -s /usr/lib /usr/local/lib64
-
-RUN apk add --no-cache --virtual .build-deps \
-  $PHPIZE_DEPS
-
-RUN docker-php-ext-configure gd \
+  && set -xe && ln -s /usr/lib /usr/local/lib64 \
+  && apk add --no-cache --virtual .build-deps \
+    $PHPIZE_DEPS \
+  && docker-php-ext-configure gd \
     --with-gd \
     --with-freetype-dir=/usr/include/ \
     --with-png-dir=/usr/include/ \
@@ -71,9 +69,8 @@ RUN docker-php-ext-configure gd \
   && docker-php-ext-configure mysqli --with-mysqli \
   && docker-php-ext-configure pdo_mysql --with-pdo-mysql \
   && docker-php-ext-configure mbstring --enable-mbstring \
-  && docker-php-ext-configure soap --enable-soap
-
-RUN docker-php-ext-install -j$(nproc) \
+  && docker-php-ext-configure soap --enable-soap \
+  && docker-php-ext-install -j$(nproc) \
     gd \
     bcmath \
     intl \
@@ -84,23 +81,20 @@ RUN docker-php-ext-install -j$(nproc) \
     soap \
     iconv \
     xsl \
-    zip
-
-ENV RABBITMQ_VERSION v0.9.0
-RUN git clone --branch ${RABBITMQ_VERSION} https://github.com/alanxz/rabbitmq-c.git /tmp/rabbitmq \
+    zip \
+  && git clone --branch ${RABBITMQ_VERSION} https://github.com/alanxz/rabbitmq-c.git /tmp/rabbitmq \
   && cd /tmp/rabbitmq \
   && mkdir build && cd build \
   && cmake .. \
-  && cmake --build . --target install
-
-ENV PHP_REDIS_VERSION 4.2.0
-RUN git clone --branch ${PHP_REDIS_VERSION} https://github.com/phpredis/phpredis /tmp/phpredis \
+  && cmake --build . --target install \
+  && git clone --branch ${PHP_REDIS_VERSION} https://github.com/phpredis/phpredis /tmp/phpredis \
   && cd /tmp/phpredis \
   && phpize  \
   && ./configure  \
   && make  \
   && make install \
-  && make test
+  && make test \
+  && apk del .build-deps
 
 # Set WEB_USER as owner for /var/www
 RUN chown -R ${WEB_USER}:${WEB_USER} /var/www/
