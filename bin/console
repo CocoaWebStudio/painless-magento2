@@ -222,6 +222,9 @@ installMagento() {
     exit 1
   fi
 
+  sed "s|\$WEB_USER|$WEB_USER|g" 'config/nginx/nginx.conf.template' > 'config/nginx/nginx.conf'
+  sed "s|\$WEB_USER|$WEB_USER|g" 'config/php/zz-docker.conf.template' > 'config/php/zz-docker.conf'
+
   # generate a SSL certificate
   generateSSLCertificate $hostname
   if [ $? -ne 0 ]; then

@@ -1,3 +1,5 @@
 src/*
 !src/.gitkeep
 .env
+config/nginx/nginx.conf
+config/php/zz-docker.conf
