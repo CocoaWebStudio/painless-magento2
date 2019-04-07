@@ -222,8 +222,10 @@ installMagento() {
     exit 1
   fi
 
-  sed "s|\$WEB_USER|$WEB_USER|g" 'config/nginx/nginx.conf.template' > 'config/nginx/nginx.conf'
-  sed "s|\$WEB_USER|$WEB_USER|g" 'config/php/zz-docker.conf.template' > 'config/php/zz-docker.conf'
+  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/nginx.conf.template" > "$CONFIGFOLDER/nginx/nginx.conf"
+  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" > "$CONFIGFOLDER/php/zz-docker.conf"
+
+  sleep 15
 
   # generate a SSL certificate
   generateSSLCertificate $hostname
@@ -271,6 +273,9 @@ installMagento() {
   # Set enviroment
   executeInDocker deploy:mode:set ${ENVIROMENT}
 
+  # Compile the code
+  executeInDocker setup:di:compile
+
   # Clear cache
   executeInDocker cache:flush
 
@@ -306,7 +311,7 @@ status() {
   fi
 
   # docker status
-  docker-compose -f $DOCKERCOMPOSEFILE ps -q | xargs docker inspect --format='{{ .Name }} {{ .State.Status }}' | sed 's:^/::g' | xargs printf "%-45s%-30s\n"
+  docker ps -q | xargs docker inspect --format='{{ .Name }} {{ .State.Status }}' | sed 's:^/::g' | xargs printf "%-45s%-30s\n"
 
 }
 
