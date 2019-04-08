@@ -1,26 +1,35 @@
 version: '3.7'
 services:
-  web:
-    build:
-      context: ./config/nginx
-      args:
-        WEB_USER: ${WEB_USER}
-    container_name: webserver
-    restart: unless-stopped 
-    ports:
-      - "80:80"
-      - "443:443"
+  mysql:
+    image: yobasystems/alpine-mariadb
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
-      - sock:/sock
-      - ./config/nginx/sites-enabled/default.conf:/etc/nginx/sites-enabled/default.conf
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./config/nginx/ssl:/etc/nginx/ssl
-      - ./config/nginx/auth:/etc/nginx/auth
-      - type: volume
-        source: app_data
-        target: /var/www/html
+      - mysqldata:/var/lib/mysql
+    expose:
+      - 3306
+    restart: always
+    networks:
+      - back
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "${PHPADMIN_PORT}:80"
+    environment:
+      PMA_HOST: "mysql"
+      PMA_PORT: 3306
     networks:
       - front
+      - back
+
+  cache:
+    image: redis:latest
+    networks:
       - back
 
   php:
@@ -44,42 +53,54 @@ services:
       - cache
     networks:
       - back
-  
-  mysql:
-    image: yobasystems/alpine-mariadb
-    env_file: .env
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DATABASE_NAME}
-      MYSQL_USER: ${DATABASE_USER}
-      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
-    volumes:
-      - mysqldata:/var/lib/mysql
-    expose:
-      - 3306
-    restart: always
-    networks:
-      - back
 
-  cache:
-    image: redis:latest
-    networks:
-      - back
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+  web:
+    build:
+      context: ./config/nginx
+      args:
+        WEB_USER: ${WEB_USER}
+    container_name: web
+    restart: unless-stopped
     ports:
-      - "${PHPADMIN_PORT}:80"
-    environment:
-      PMA_HOST: "mysql"
-      PMA_PORT: 3306
+      - "80:80"
+      - "443:443"
+    volumes:
+      - sock:/sock
+      - ./config/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/ssl:/etc/nginx/ssl
+      - ./config/nginx/auth:/etc/nginx/auth
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - dhparam:/etc/ssl/certs
+      - type: volume
+        source: app_data
+        target: /var/www/html
+    depends_on:
+      - php
     networks:
       - front
       - back
 
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - app_data:/var/www/html
+    depends_on:
+      - web
+    command: ${CERBOT_COMMAND}
+
 volumes:
+  certbot-etc:
+  certbot-var:
+    driver: local
+
   mysqldata:
     driver: local
+
   app_data:
     driver: local
     driver_opts:
@@ -88,6 +109,13 @@ volumes:
       o: bind
   sock:
     driver: local
+
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: "${ROOT_PROJECT}config/dhparam"
+      o: bind
 
 networks:
   front:

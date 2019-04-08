@@ -105,13 +105,17 @@ if [ -z "$BACKEND_FRONTNAME" ]; then
   exit 1
 fi
 
-
 # Check availability of docker
-hash docker 2>/dev/null || { echo >&2 "$SCRIPTNAME requires \"docker\""; exit 1; }
+hash docker 2>/dev/null || {
+  echo >&2 "$SCRIPTNAME requires \"docker\""
+  exit 1
+}
 
 # Check availability of docker-compose
-hash docker-compose 2>/dev/null || { echo >&2 "$SCRIPTNAME requires \"docker-compose\""; exit 1; }
-
+hash docker-compose 2>/dev/null || {
+  echo >&2 "$SCRIPTNAME requires \"docker-compose\""
+  exit 1
+}
 
 #######################################
 # Execute bin/magento inside the php docker
@@ -126,8 +130,8 @@ hash docker-compose 2>/dev/null || { echo >&2 "$SCRIPTNAME requires \"docker-com
 executeInDocker() {
 
   if [ $(isRunning) = false ]; then
-    echo >&2 "Docker is not running. Please start the containers first.";
-    exit 1;
+    echo >&2 "Docker is not running. Please start the containers first."
+    exit 1
   fi
 
   # pass the arguments to the bin/magento script inside the PHP container
@@ -139,27 +143,18 @@ executeInDocker() {
 # Globals:
 #   SSLKEYFILEPATH
 
-# Arguments:
-#   hostname
 # Returns:
 #   None
 #######################################
 generateSSLCertificate() {
-  # abort if no hostname was specified
-  hostname=$1
-  if [ -z "$hostname" ]; then
-    echo >&2 "No hostname given"
-    return 1
-  fi
 
   # assemble file paths for key and cert
   SSLKEYFILEPATH="$SSLCERTIFICATEFOLDER/key.pem"
   SSLCERTFILEPATH="$SSLCERTIFICATEFOLDER/cert.pem"
 
   # check if the certificates already exist
-  if [ -f "$SSLKEYFILEPATH" ] && [ -f "$SSLCERTFILEPATH" ]
-  then
-    echo "Using existing SSL certificates:"
+  if [ -f "$SSLKEYFILEPATH" ] && [ -f "$SSLCERTFILEPATH" ]; then
+    echo "Using existing SSL certificates for $HOSTNAME:"
     printf "  %-8s%-30s\n" "Key:" $SSLKEYFILEPATH
     printf "  %-8s%-30s\n" "Cert:" $SSLCERTFILEPATH
     return 0
@@ -174,7 +169,7 @@ generateSSLCertificate() {
     return 1
   }
 
-  openssl req -x509 -newkey rsa:2048 -nodes -subj "/CN=$hostname" -keyout $SSLKEYFILEPATH -out $SSLCERTFILEPATH -days 360 2>/dev/null
+  openssl req -x509 -newkey rsa:2048 -nodes -subj "/CN=$HOSTNAME" -keyout $SSLKEYFILEPATH -out $SSLCERTFILEPATH -days 360 2>/dev/null
   if [ $? -ne 0 ]; then
     echo >&2 "Generating SSL certificates failed."
     echo >&2 "Please place the key and certificate into the certificate-folder \"$SSLCERTIFICATEFOLDER\":"
@@ -184,7 +179,7 @@ generateSSLCertificate() {
     return 1
   fi
 
-  echo "Generated new SSL certificates for $hostname:"
+  echo "Generated new SSL certificates for $HOSTNAME:"
   printf "  %-8s%-30s\n" "Key:" $SSLKEYFILEPATH
   printf "  %-8s%-30s\n" "Cert:" $SSLCERTFILEPATH
   return 0
@@ -205,36 +200,30 @@ generateSSLCertificate() {
 #   DEFAULT_CURRENCY
 #   DEFAULT_TIMEZONE
 #   BACKEND_FRONTNAME
-# Arguments:
-#   hostname
 # Returns:
 #   None
 #######################################
 installMagento() {
+  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
+  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
 
-  # get the hostname from the arguments
-  hostname=$1
-  if [ -z "$hostname" ]; then
-    echo >&2 "Please specify a hostname for your Magento shop (e.g. \"www.example.com\")\n"
-    echo >&2 "Usage:\n"
-    echo >&2 "  $SCRIPTNAME install www.example.com"
-
-    exit 1
+  if [ $ENVIROMENT = 'production' ]; then
+    openssl dhparam -out $CONFIGFOLDER/dhparam/dhparam-2048.pem 2048
+    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+  else
+    # generate a SSL certificate
+    generateSSLCertificate
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   fi
-
-  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/nginx.conf.template" > "$CONFIGFOLDER/nginx/nginx.conf"
-  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" > "$CONFIGFOLDER/php/zz-docker.conf"
 
   sleep 15
 
-  # generate a SSL certificate
-  generateSSLCertificate $hostname
-  if [ $? -ne 0 ]; then
-    exit 1
-  fi
-
   # Add write permissions for pub folder
   chmod -R g+w src/pub
+
   # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
   restart
 
@@ -245,9 +234,9 @@ installMagento() {
   sleep 30
 
   # Install magento 2
-  baseURLInsecure="http://${hostname}/"
-  baseURLSecure="https://${hostname}/"
-  backendURL="http://${hostname}/${BACKEND_FRONTNAME}"
+  baseURLInsecure="http://${HOSTNAME}/"
+  baseURLSecure="https://${HOSTNAME}/"
+  backendURL="http://${HOSTNAME}/${BACKEND_FRONTNAME}"
   executeInDocker setup:install \
     --base-url=$baseURLInsecure \
     --use-secure=0 \
@@ -306,8 +295,8 @@ installMagento() {
 #######################################
 status() {
   if [ $(isRunning) = false ]; then
-    echo >&2 "Not running";
-    exit 1;
+    echo >&2 "Not running"
+    exit 1
   fi
 
   # docker status
@@ -346,12 +335,18 @@ stop() {
 start() {
 
   if [ $(isRunning) = true ]; then
-    echo >&2 "The component are already running";
-    exit 1;
+    echo >&2 "The component are already running"
+    exit 1
+  fi
+
+  #!/bin/bash
+  CERBOT_COMMAND
+  if [ "${ENVIROMENT}" = "production" ]; then
+    CERBOT_COMMAND= "certonly --webroot --webroot-path=/var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}   -d www.${HOSTNAME} --cert-name ${HOSTNAME}"
   fi
 
   # start docker containers
-  docker-compose -f $DOCKERCOMPOSEFILE  up -d
+  CERBOT_COMMAND=$CERBOT_COMMAND docker-compose -f $DOCKERCOMPOSEFILE up -d
 
 }
 
@@ -400,49 +395,54 @@ isRunning() {
 #   None
 #######################################
 usage() {
-  echo "Utility for controlling dockerized Magento projects\n"
-  echo "Usage:\n\n  $SCRIPTNAME <action> <arguments...>"
+  echo "Utility for controlling dockerized Magento projects"
+  echo "Usage:"
+  echo "$SCRIPTNAME <action> <arguments...>"
   echo ""
-  echo "Actions:\n"
-  printf "  %-15s%-30s\n" "install" "Install Magento"
-  printf "  %-15s%-30s\n" "exec" "Execute bin/magento inside docker"
-  echo ""
-  printf "  %-15s%-30s\n" "start" "Start the server and all of its components"
-  printf "  %-15s%-30s\n" "restart" "Restart the server"
-  printf "  %-15s%-30s\n" "stop" "Stop the server"
-  printf "  %-15s%-30s\n" "status" "Get the current server status"
+  echo "Actions:"
+  printf "  %-30s%-30s\n" "install" "Installation of nginx, php7.2, mariadb, redis, let's encrypt and magento. "
+  printf "  %-30s%-30s\n" "exec <magento:function>" "Execute bin/magento inside docker"
+  printf "  %-30s%-30s\n" "start" "Start the server and all of its components"
+  printf "  %-30s%-30s\n" "restart" "Restart the server"
+  printf "  %-30s%-30s\n" "stop" "Stop the server"
+  printf "  %-30s%-30s\n" "status" "Get the current server status"
 }
 
 case "$1" in
-    install)
-    shift 1
-    installMagento $*
-    ;;
+install)
+  shift 1
+  installMagento $*
+  ;;
 
-    exec)
-    shift 1
-    executeInDocker $*
-    ;;
+exec)
+  shift 1
+  executeInDocker $*
+  ;;
 
-    start)
-    start
-    ;;
+start)
+  start
+  ;;
 
-    restart)
-    restart
-    ;;
+restart)
+  restart
+  ;;
 
-    stop)
-    stop
-    ;;
+stop)
+  stop
+  ;;
 
-    status)
-    status
-    ;;
+status)
+  status
+  ;;
 
-    *)
-    usage
-    ;;
+test)
+  shift 1
+  testAddress $*
+  ;;
+
+*)
+  usage
+  ;;
 esac
 
 exit 0

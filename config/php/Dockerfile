@@ -107,7 +107,7 @@ RUN mkdir -p /var/log/php-fpm && \
   chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm
 
 # Install xdebug
-RUN if [ "${ENVIROMENT}" = "development" ] ; \
+RUN if [ "${ENVIROMENT}" = "developer" ] ; \
   then cd /tmp/ && git clone https://github.com/xdebug/xdebug.git \
   && cd xdebug && phpize && ./configure --enable-xdebug && make \
   && mkdir -p /usr/lib/php7/ && cp modules/xdebug.so /usr/lib/php7/xdebug.so \
