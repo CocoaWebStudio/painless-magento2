@@ -185,6 +185,35 @@ generateSSLCertificate() {
   return 0
 }
 
+generateDHparam() {
+  # assemble file paths for key and cert
+  DHFILEPATH="$CONFIGFOLDER/dhparam/dhparam-2048.pem"
+
+  # check if the certificates already exist
+  if [ -f "DHFILEPATH" ]; then
+    echo "Using existing Diffie-Hellman key for $HOSTNAME:"
+    printf "  %-8s%-30s\n" "Key:" $DHFILEPATH
+    return 0
+  fi
+
+  # Check availability of openssl
+  hash openssl 2>/dev/null || {
+    echo >&2 "$SCRIPTNAME requires \"openssl\" to generate Diffie-Hellman key."
+    echo >&2 "Please install openssl or place the Diffie-Hellman key folder \"$SSLCERTIFICATEFOLDER\":"
+    printf >&2 "  %-8s%-30s\n" "Key:" $DHFILEPATH
+    return 1
+  }
+
+  openssl dhparam -out $DHFILEPATH 2048
+  if [ $? -ne 0 ]; then
+    echo >&2 "Generating Diffie-Hellman key failed."
+    return 1
+  fi
+
+  echo "Generated new Diffie-Hellman key for $HOSTNAME:"
+  return 0
+}
+
 #######################################
 # Install Magento
 # Globals:
@@ -208,8 +237,12 @@ installMagento() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
 
   if [ $ENVIROMENT = 'production' ]; then
-    openssl dhparam -out $CONFIGFOLDER/dhparam/dhparam-2048.pem 2048
+    generateDHparam
     sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+
+    CERBOT_COMMAND="certonly --webroot --webroot-path=/var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}   -d www.${HOSTNAME} --cert-name ${HOSTNAME}"
+
+    sed "s|CERBOT_COMMAND|CERBOT_COMMAND=$CERBOT_COMMAND|g" "$PROJECTPATH#.env" >"$PROJECTPATH#.env"
   else
     # generate a SSL certificate
     generateSSLCertificate
@@ -337,11 +370,6 @@ start() {
   if [ $(isRunning) = true ]; then
     echo >&2 "The component are already running"
     exit 1
-  fi
-
-  if [ "${ENVIROMENT}" = "production" ]; then
-    CERBOT_COMMAND="certonly --webroot --webroot-path=/var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}   -d www.${HOSTNAME} --cert-name ${HOSTNAME}"
-    sed "s|CERBOT_COMMAND|CERBOT_COMMAND=$CERBOT_COMMAND|g" "$PROJECTPATH#.env" >"$PROJECTPATH#.env"
   fi
 
   # start docker containers
