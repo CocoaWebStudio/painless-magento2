@@ -339,14 +339,13 @@ start() {
     exit 1
   fi
 
-  #!/bin/bash
-  CERBOT_COMMAND
   if [ "${ENVIROMENT}" = "production" ]; then
-    CERBOT_COMMAND= "certonly --webroot --webroot-path=/var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}   -d www.${HOSTNAME} --cert-name ${HOSTNAME}"
+    CERBOT_COMMAND="certonly --webroot --webroot-path=/var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}   -d www.${HOSTNAME} --cert-name ${HOSTNAME}"
+    sed "s|CERBOT_COMMAND|CERBOT_COMMAND=$CERBOT_COMMAND|g" "$PROJECTPATH#.env" >"$PROJECTPATH#.env"
   fi
 
   # start docker containers
-  CERBOT_COMMAND=$CERBOT_COMMAND docker-compose -f $DOCKERCOMPOSEFILE up -d
+  docker-compose -f ${DOCKERCOMPOSEFILE} up -d
 
 }
 
