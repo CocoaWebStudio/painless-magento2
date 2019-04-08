@@ -190,7 +190,7 @@ generateDHparam() {
   DHFILEPATH="$CONFIGFOLDER/dhparam/dhparam-2048.pem"
 
   # check if the certificates already exist
-  if [ -f "DHFILEPATH" ]; then
+  if [ -f "$DHFILEPATH" ]; then
     echo "Using existing Diffie-Hellman key for $HOSTNAME:"
     printf "  %-8s%-30s\n" "Key:" $DHFILEPATH
     return 0
