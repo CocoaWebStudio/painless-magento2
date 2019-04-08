@@ -242,7 +242,7 @@ installMagento() {
 
     CERBOT_COMMAND="certonly --webroot --webroot-path=/var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}   -d www.${HOSTNAME} --cert-name ${HOSTNAME}"
 
-    sed "s|CERBOT_COMMAND|CERBOT_COMMAND=$CERBOT_COMMAND|g" "$PROJECTPATH#.env" >"$PROJECTPATH#.env"
+    sed "s|CERBOT_COMMAND|CERBOT_COMMAND=$CERBOT_COMMAND|g" "$PROJECTPATH/.env" >"$PROJECTPATH/.env"
   else
     # generate a SSL certificate
     generateSSLCertificate
