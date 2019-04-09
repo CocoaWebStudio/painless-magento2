@@ -1,7 +1,7 @@
 FROM certbot/certbot
 
-ARG ADMIN_EMAIL=johndoe@example.com
-ARG HOSTNAME=magedocker.test
+ENV ADMIN_EMAIL=johndoe@example.com
+ENV HOSTNAME=magedocker.test
 
 CMD certbot certonly --webroot \
   -w /var/www/html \

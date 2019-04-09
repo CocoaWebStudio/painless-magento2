@@ -29,6 +29,7 @@ services:
         ipv4_address: ${NETWORK_BASE}.12
 
   cache:
+    container_name: redis
     image: redis:alpine
     hostname: redis
     networks:
@@ -36,12 +37,12 @@ services:
         ipv4_address: ${NETWORK_BASE}.7
 
   php:
+    container_name: php
     build:
       context: ./config/php
       args:
         ENVIROMENT: ${ENVIROMENT}
         WEB_USER: ${WEB_USER}
-    container_name: weblogic
     volumes:
       - sock:/sock
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
@@ -57,11 +58,11 @@ services:
         ipv4_address: ${NETWORK_BASE}.18
 
   web:
+    container_name: web
     build:
       context: ./config/nginx
       args:
         WEB_USER: ${WEB_USER}
-    container_name: web
     restart: unless-stopped
     ports:
       - "80:80"
@@ -85,12 +86,12 @@ services:
         ipv4_address: ${NETWORK_BASE}.3
 
   certbot:
+    container_name: certbot
     build:
       context: ./config/certbot
-      args:
-        ADMIN_EMAIL: ${ADMIN_EMAIL}
-        HOSTNAME: ${HOSTNAME}
-    container_name: certbot
+    environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      HOSTNAME: ${HOSTNAME}
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
