@@ -54,6 +54,7 @@ services:
     depends_on:
       - mysql
       - cache
+    user: ${WEB_USER}
     networks:
       back:
         ipv4_address: ${NETWORK_BASE}.18
