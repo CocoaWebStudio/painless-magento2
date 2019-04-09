@@ -251,8 +251,13 @@ installMagento() {
     generateCertificates
     generateDHparam
 
-    sleep 20
     sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+
+    sleep 15
+
+    # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
+    docker-compose stop web
+    docker-compose up -d --no-deps --remove-orphans web
   else
     # generate a SSL certificate
     generateSSLCertificate
@@ -260,13 +265,12 @@ installMagento() {
       exit 1
     fi
     sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
+    restart
   fi
 
   # Add write permissions for pub folder
   chmod -R g+w src/pub
-
-  # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
-  restart
 
   # Delete config before install
   rm -f src/app/etc/env.php
