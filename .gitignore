@@ -1,11 +1,12 @@
 src/*
 !src/.gitkeep
-.env
-config/nginx/nginx.conf
-config/php/zz-docker.conf
 config/dhparam/*
 !config/dhparam/.gitkeep
 ssl/*
 !ssl/.gitkeep
-config/nginx/sites-enabled/
+config/nginx/sites-enabled/*
 !config/nginx/sites-enabled/.gitkeep
+.env
+config/nginx/nginx.conf
+config/php/zz-docker.conf
+
