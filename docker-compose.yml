@@ -51,6 +51,7 @@ services:
         source: app_data
         target: /var/www/html
     env_file: .env
+    user: ${WEB_USER}
     depends_on:
       - mysql
       - cache
