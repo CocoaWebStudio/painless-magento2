@@ -219,12 +219,15 @@ generateCerbotCommand() {
   CERT_PATH="$CONFIGFOLDER/ssl/live/$HOSTNAME"
 
   # check if the certificates already exist
-  if [ -d "$DHFILEPATH" ]; then
+  if [ -d "$CERT_PATH" ]; then
     echo "Using existing SSl certificates for $HOSTNAME:"
     return 0
   fi
 
+  sed -i "/CERBOT_COMMAND/ c\ CERBOT_COMMAND='"
+
   CERBOT_COMMAND="certonly --webroot -w /var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}"
+
 
   sed -i "s|CERBOT_COMMAND=''|CERBOT_COMMAND='$CERBOT_COMMAND'|g" "$PROJECTPATH/.env"
 
