@@ -44,8 +44,6 @@ services:
     container_name: weblogic
     volumes:
       - sock:/sock
-      - ./config/php/php.ini:/usr/local/etc/php/php.ini
-      - ./config/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
       - type: volume
         source: app_data

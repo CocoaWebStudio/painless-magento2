@@ -19,11 +19,14 @@ ENV PHPIZE_DEPS \
   libpng-dev  \
   libjpeg-turbo-dev
 
-ENV RABBITMQ_VERSION v0.9.0
-
 ENV PHP_REDIS_VERSION 4.2.0
 
-RUN addgroup -g 3000 -S ${WEB_USER} \
+COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY php.ini /usr/local/etc/php/php.ini
+
+RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
+  && chown root:root /usr/local/etc/php/php.ini \
+  && addgroup -g 3000 -S ${WEB_USER} \
   && adduser -u 3000 -S -D -G ${WEB_USER} ${WEB_USER} \
   && apk add --no-cache git \
   # persistent / runtime deps
@@ -44,7 +47,6 @@ RUN addgroup -g 3000 -S ${WEB_USER} \
   libzip-dev \
   zip \
   zlib-dev \
-  rabbitmq-c-dev \
   libmcrypt \
   libxslt-dev \
   libwebp-dev \
@@ -53,8 +55,6 @@ RUN addgroup -g 3000 -S ${WEB_USER} \
   perl \
   shadow \
   ssmtp \
-  # workaround for rabbitmq linking issue
-  && set -xe && ln -s /usr/lib /usr/local/lib64 \
   && apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
   && docker-php-ext-configure gd \
@@ -93,6 +93,7 @@ RUN addgroup -g 3000 -S ${WEB_USER} \
   && touch /var/log/php-fpm/access.log \
   && touch /var/log/php-fpm/error.log \
   && chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm \
+  && chown -R ${WEB_USER}:${WEB_USER} /sock \
   # Install xdebug
   && if [ "${ENVIROMENT}" = "developer" ]; then \
     apk add --no-cache $PHPIZE_DEPS \
