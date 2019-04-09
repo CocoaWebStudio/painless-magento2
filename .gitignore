@@ -3,3 +3,5 @@ src/*
 .env
 config/nginx/nginx.conf
 config/php/zz-docker.conf
+config/dhparam/*
+!config/dhparam/.gitkeep
