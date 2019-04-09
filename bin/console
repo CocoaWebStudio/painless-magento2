@@ -214,23 +214,14 @@ generateDHparam() {
   return 0
 }
 
-generateCerbotCommand() {
+generateCertificates() {
+  sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   # assemble file paths for key and cert
-  CERT_PATH="$CONFIGFOLDER/ssl/live/$HOSTNAME"
 
-  # check if the certificates already exist
-  if [ -d $CERT_PATH ]; then
-    echo "Using existing SSl certificates for $HOSTNAME:"
-    return 0
-  fi
+  # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
+  restart
 
-  sed -i "/CERBOT_COMMAND/ c\ CERBOT_COMMAND=''" "$PROJECTPATH/.env"
-
-  CERBOT_COMMAND="certonly --webroot -w /var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --staging -d ${HOSTNAME}"
-
-  sed -i "s|CERBOT_COMMAND=''|CERBOT_COMMAND='$CERBOT_COMMAND'|g" "$PROJECTPATH/.env"
-
-  echo "Generated new Cerbot command:"
+  echo "Cerbot: new certificates genereted"
   return 0
 }
 
@@ -257,8 +248,10 @@ installMagento() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
 
   if [ $ENVIROMENT = 'production' ]; then
+    generateCertificates
     generateDHparam
-    generateCerbotCommand
+
+    sleep 20
     sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   else
     # generate a SSL certificate
@@ -268,8 +261,6 @@ installMagento() {
     fi
     sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   fi
-
-  sleep 15
 
   # Add write permissions for pub folder
   chmod -R g+w src/pub

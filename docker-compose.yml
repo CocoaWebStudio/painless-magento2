@@ -85,7 +85,11 @@ services:
         ipv4_address: ${NETWORK_BASE}.3
 
   certbot:
-    image: certbot/certbot
+    build:
+      context: ./config/certbot
+      args:
+        ADMIN_EMAI: ${ADMIN_EMAI}
+        HOSTNAME: ${HOSTNAME}
     container_name: certbot
     volumes:
       - certbot-etc:/etc/letsencrypt
@@ -93,7 +97,6 @@ services:
       - app_data:/var/www/html
     depends_on:
       - web
-    command: ${CERBOT_COMMAND}
 
 volumes:
   certbot-etc:
