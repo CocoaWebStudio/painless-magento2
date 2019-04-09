@@ -99,6 +99,11 @@ services:
 
 volumes:
   certbot-etc:
+    driver: local
+    driver_opts:
+      type: none
+      device: "${ROOT_PROJECT}ssl"
+      o: bind
   certbot-var:
     driver: local
 
