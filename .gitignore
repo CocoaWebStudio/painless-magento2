@@ -2,6 +2,7 @@ src/*
 !src/.gitkeep
 .env
 config/nginx/nginx.conf
+config/nginx/sites-enabled/default.conf
 config/php/zz-docker.conf
 config/dhparam/*
 !config/dhparam/.gitkeep
