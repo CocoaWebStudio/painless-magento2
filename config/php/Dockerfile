@@ -23,8 +23,8 @@ ENV RABBITMQ_VERSION v0.9.0
 
 ENV PHP_REDIS_VERSION 4.2.0
 
-RUN addgroup -g 3000 -S ${WEB_USER} \
-  && adduser -u 3000 -S -D -G ${WEB_USER} ${WEB_USER} \
+RUN addgroup -g 3000 ${WEB_USER} \
+  && adduser -u 3000 -D -G ${WEB_USER} ${WEB_USER} \
   && apk add --no-cache git \
   # persistent / runtime deps
   && apk add --no-cache --virtual .persistent-deps \
@@ -99,3 +99,5 @@ RUN addgroup -g 3000 -S ${WEB_USER} \
     && pecl install xdebug-2.7.1 \
     && docker-php-ext-enable xdebug ; \
   fi
+
+USER ${WEB_USER}
