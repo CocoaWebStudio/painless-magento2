@@ -93,6 +93,8 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
   && touch /var/log/php-fpm/access.log \
   && touch /var/log/php-fpm/error.log \
   && chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm \
+  && mkdir -p /sock \
+  && touch /sock/docker.sock \
   && chown -R ${WEB_USER}:${WEB_USER} /sock \
   # Install xdebug
   && if [ "${ENVIROMENT}" = "developer" ]; then \
