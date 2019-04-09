@@ -88,7 +88,7 @@ services:
     build:
       context: ./config/certbot
       args:
-        ADMIN_EMAI: ${ADMIN_EMAI}
+        ADMIN_EMAIL: ${ADMIN_EMAI}
         HOSTNAME: ${HOSTNAME}
     container_name: certbot
     volumes:
