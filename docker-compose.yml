@@ -14,7 +14,8 @@ services:
       - 3306
     restart: always
     networks:
-      - back
+      back:
+        ipv4_address: ${NETWORK_BASE}.10
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -24,13 +25,15 @@ services:
       PMA_HOST: "mysql"
       PMA_PORT: 3306
     networks:
-      - front
-      - back
+      back:
+        ipv4_address: ${NETWORK_BASE}.12
 
   cache:
-    image: redis:latest
+    image: redis:alpine
+    hostname: redis
     networks:
-      - back
+      back:
+        ipv4_address: ${NETWORK_BASE}.7
 
   php:
     build:
@@ -52,7 +55,8 @@ services:
       - mysql
       - cache
     networks:
-      - back
+      back:
+        ipv4_address: ${NETWORK_BASE}.18
 
   web:
     build:
@@ -79,8 +83,8 @@ services:
     depends_on:
       - php
     networks:
-      - front
-      - back
+      back:
+        ipv4_address: ${NETWORK_BASE}.3
 
   certbot:
     image: certbot/certbot
@@ -107,6 +111,7 @@ volumes:
       type: none
       device: "${ROOT_PROJECT}src"
       o: bind
+
   sock:
     driver: local
 
@@ -118,7 +123,9 @@ volumes:
       o: bind
 
 networks:
-  front:
-    driver: bridge
   back:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_BASE}.0/24
