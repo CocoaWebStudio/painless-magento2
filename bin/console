@@ -214,6 +214,24 @@ generateDHparam() {
   return 0
 }
 
+generateCerbotCommand() {
+  # assemble file paths for key and cert
+  CERT_PATH="$CONFIGFOLDER/ssl/live/$HOSTNAME"
+
+  # check if the certificates already exist
+  if [ -d "$DHFILEPATH" ]; then
+    echo "Using existing SSl certificates for $HOSTNAME:"
+    return 0
+  fi
+
+  CERBOT_COMMAND="certonly --webroot -w /var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}"
+
+  sed -i "s|CERBOT_COMMAND=''|CERBOT_COMMAND='$CERBOT_COMMAND'|g" "$PROJECTPATH/.env"
+
+  echo "Generated new Diffie-Hellman key for $HOSTNAME:"
+  return 0
+}
+
 #######################################
 # Install Magento
 # Globals:
@@ -238,11 +256,8 @@ installMagento() {
 
   if [ $ENVIROMENT = 'production' ]; then
     generateDHparam
+    generateCerbotCommand
     sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
-
-    CERBOT_COMMAND="certonly --webroot -w /var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}"
-
-    sed -i "s|CERBOT_COMMAND=''|CERBOT_COMMAND='$CERBOT_COMMAND'|g" "$PROJECTPATH/.env"
   else
     # generate a SSL certificate
     generateSSLCertificate
