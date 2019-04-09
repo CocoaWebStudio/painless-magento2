@@ -224,7 +224,7 @@ generateCerbotCommand() {
     return 0
   fi
 
-  sed -i "/CERBOT_COMMAND/ c\ CERBOT_COMMAND='" "$PROJECTPATH/.env"
+  sed -i "/CERBOT_COMMAND/ c\ CERBOT_COMMAND=''" "$PROJECTPATH/.env"
 
   CERBOT_COMMAND="certonly --webroot -w /var/www/html --email ${ADMIN_EMAIL} --agree-tos --no-eff-email --force-renewal -d ${HOSTNAME}"
 
