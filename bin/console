@@ -266,8 +266,11 @@ installMagento() {
 
   restart
 
-  # Add write permissions for pub folder
-  chmod -R g+w src/pub
+  # Set magento's prmissions
+  chown -R ${WEB_USER}:${WEB_USER} src
+  find src/var src/vendor src/pub/static src/pub/media src/app/etc -type f -exec chmod u+w {} \;
+  find src/var src/vendor src/pub/static src/pub/media src/app/etc -type d -exec chmod u+w {} \;
+  chmod u+x src/bin/magento
 
   # Delete config before install
   rm -f src/app/etc/env.php

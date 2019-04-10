@@ -99,12 +99,6 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
     apk add --no-cache $PHPIZE_DEPS \
     && pecl install xdebug-2.7.1 \
     && docker-php-ext-enable xdebug ; \
-  fi \
-  # Set magento's prmissions for WEB_USER
-  && cd /var/www/html \
-  && chown -R ${WEB_USER}:${WEB_USER} /var/www/html \
-  && find var vendor pub/static pub/media app/etc -type f -exec chmod u+w {} \; \
-  && find var vendor pub/static pub/media app/etc -type d -exec chmod u+w {} \; \
-  && chmod u+x bin/magento
+  fi
 
 USER ${WEB_USER}
