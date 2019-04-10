@@ -92,7 +92,7 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
 
 RUN mkdir -p /home/${WEB_USER} \
   && addgroup -g 3000 -S ${WEB_USER} \
-  && adduser -u 3000 -h -S -D -G ${WEB_USER} ${WEB_USER} \
+  && adduser -u 3000 -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
   && mkdir -p /home/${WEB_USER}/html \
   # Create log folders
   && mkdir -p /var/log/php-fpm \
@@ -102,7 +102,7 @@ RUN mkdir -p /home/${WEB_USER} \
   #configure nginx - fpm socket
   && mkdir -p /sock \
   && touch /sock/docker.sock \
-  && chown -R ${WEB_USER}:${WEB_USER} /sock \
+  && chown -R ${WEB_USER}:${WEB_USER} /sock
 
 WORKDIR /home/${WEB_USER}/html
 
