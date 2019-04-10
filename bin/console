@@ -221,7 +221,7 @@ generateCertificates() {
   # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
   restart
 
-  echo "Cerbot: new certificates genereted"
+  echo "Cerbot: new certificates generated"
   return 0
 }
 

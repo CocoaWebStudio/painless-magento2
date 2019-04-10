@@ -7,5 +7,3 @@ RUN addgroup -g 3000 -S ${WEB_USER} \
   && mkdir -p /sock \
   && touch /sock/docker.sock \
   && chown -R ${WEB_USER}:${WEB_USER} /sock
-
-USER ${WEB_USER}
