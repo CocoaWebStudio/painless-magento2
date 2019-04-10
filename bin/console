@@ -127,7 +127,7 @@ hash docker-compose 2>/dev/null || {
 # Returns:
 #   None
 #######################################
-executeInDocker() {
+executeInMagento() {
 
   if [ $(isRunning) = false ]; then
     echo >&2 "Docker is not running. Please start the containers first."
@@ -214,14 +214,30 @@ generateDHparam() {
   return 0
 }
 
-generateCertificates() {
-  sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
-  # assemble file paths for key and cert
+applyCertificates() {
+  if [ $ENVIROMENT = 'production' ]; then
+    docker-compose stop certbot
+    docker-compose up -d --no-deps --remove-orphans --build certbot
 
-  # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
-  restart
+    generateDHparam
 
-  echo "Cerbot: new certificates generated"
+    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+  else
+    # generate a SSL certificate
+    generateSSLCertificate
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
+  fi
+
+  sleep 10
+
+  docker-compose stop web
+  docker-compose up -d --no-deps --remove-orphans --build web
+
+  echo "Done, pleaase test https://$HOSTNAME"
   return 0
 }
 
@@ -246,28 +262,9 @@ generateCertificates() {
 installMagento() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
+  sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
 
-  if [ $ENVIROMENT = 'production' ]; then
-    generateCertificates
-    generateDHparam
-
-    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
-
-    sleep 15
-
-    # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
-    docker-compose stop web
-    docker-compose up -d --no-deps --remove-orphans web
-  else
-    # generate a SSL certificate
-    generateSSLCertificate
-    if [ $? -ne 0 ]; then
-      exit 1
-    fi
-    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
-    # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
-    restart
-  fi
+  restart
 
   # Add write permissions for pub folder
   chmod -R g+w src/pub
@@ -282,12 +279,11 @@ installMagento() {
   baseURLInsecure="http://${HOSTNAME}/"
   baseURLSecure="https://${HOSTNAME}/"
   backendURL="https://${HOSTNAME}/${BACKEND_FRONTNAME}"
-  executeInDocker setup:install \
+  executeInMagento setup:install \
     --cleanup-database \
     --base-url=${baseURLSecure} \
-    --base-url-secure=${baseURLSecure} \
-    --use-secure=1 \
-    --use-secure-admin=1 \
+    --use-secure=0 \
+    --use-secure-admin=0 \
     --backend-frontname=${BACKEND_FRONTNAME} \
     --language=${DEFAULT_LANGUAGE} \
     --currency=${DEFAULT_CURRENCY} \
@@ -310,25 +306,25 @@ installMagento() {
     --cache-backend-redis-db=0
 
   # Install and update modules
-  executeInDocker setup:upgrade
+  executeInMagento setup:upgrade
 
   # Remove old genereted code
   rm -R $PROJECTPATH/src/generated/code/Magento
 
   # Set enviroment
-  executeInDocker deploy:mode:set ${ENVIROMENT}
+  executeInMagento deploy:mode:set ${ENVIROMENT}
 
   # Compile the code
-  executeInDocker setup:di:compile
+  executeInMagento setup:di:compile
 
   # Clear cache
-  executeInDocker cache:flush
+  executeInMagento cache:flush
 
   # Deploy static content
-  executeInDocker setup:static-content:deploy -f
+  executeInMagento setup:static-content:deploy -f
 
   # Index data
-  executeInDocker indexer:reindex
+  executeInMagento indexer:reindex
 
   # Print results
   echo "the enviroment is ${ENVIROMENT}"
@@ -463,9 +459,9 @@ install)
   installMagento $*
   ;;
 
-exec)
+mage)
   shift 1
-  executeInDocker $*
+  executeInMagento $*
   ;;
 
 start)
@@ -476,8 +472,8 @@ restart)
   restart
   ;;
 
-certbot)
-  generateCertificates
+ssl)
+  applyCertificates
   ;;
 
 stop)
