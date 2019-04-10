@@ -9,7 +9,7 @@ server {
 
     client_max_body_size        10M;
 
-    set                         $MAGE_ROOT /var/www/html/mage;
+    set                         $MAGE_ROOT /var/www/html;
 
     root $MAGE_ROOT/pub;
 

@@ -12,7 +12,7 @@ server
   location ~ /.well-known/acme-challenge
   {
     allow all;
-    root /var/www/html/mage;
+    root /var/www/html;
   }
 
   location /
@@ -49,7 +49,7 @@ server
 
   client_max_body_size 10M;
 
-  set $MAGE_ROOT /var/www/html/mage;
+  set $MAGE_ROOT /var/www/html;
 
   root $MAGE_ROOT/pub;
 

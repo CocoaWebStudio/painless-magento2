@@ -48,7 +48,7 @@ services:
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
       - type: volume
         source: app_data
-        target: /var/www/html/mage
+        target: /var/www/html
     env_file: .env
     depends_on:
       - mysql
@@ -75,7 +75,7 @@ services:
       - sock:/sock
       - type: volume
         source: app_data
-        target: /var/www/html/mage
+        target: /var/www/html
     depends_on:
       - php
     networks:
@@ -92,15 +92,14 @@ services:
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-      - type: volume
-        source: app_data
-        target: /var/www/html/mage
+      - certbot-html:/var/www/html
     depends_on:
       - web
 
 volumes:
   certbot-etc:
   certbot-var:
+  certbot-html:
   mysqldata:
   sock:
     driver: local
