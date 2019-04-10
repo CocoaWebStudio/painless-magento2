@@ -48,7 +48,7 @@ services:
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
       - type: volume
         source: app_data
-        target: /var/www/html
+        target: /var/www/html/mage
     env_file: .env
     depends_on:
       - mysql
@@ -75,7 +75,7 @@ services:
       - sock:/sock
       - type: volume
         source: app_data
-        target: /var/www/html
+        target: /var/www/html/mage
     depends_on:
       - php
     networks:
