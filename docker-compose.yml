@@ -85,11 +85,10 @@ services:
     container_name: certbot
     build:
       context: ./config/certbot
-      args:
-        WEB_USER: ${WEB_USER}
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       HOSTNAME: ${HOSTNAME}
+      WEB_USER: ${WEB_USER}
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
