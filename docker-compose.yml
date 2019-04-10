@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${DATABASE_USER}
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
-      - mysqldata: /var/lib/mysql
+      - mysqldata:/var/lib/mysql
     expose:
       - 3306
     restart: always
@@ -44,7 +44,7 @@ services:
         ENVIROMENT: ${ENVIROMENT}
         WEB_USER: ${WEB_USER}
     volumes:
-      - sock: /sock
+      - sock:/sock
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
       - type: volume
         source: app_data
@@ -67,12 +67,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./config/nginx/sites-enabled: /etc/nginx/sites-enabled
-      - ./config/nginx/nginx.conf: /etc/nginx/nginx.conf
-      - certbot-etc: /etc/letsencrypt
-      - certbot-var: /var/lib/letsencrypt
-      - dhparam: /etc/ssl/certs
-      - sock: /sock
+      - ./config/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - dhparam:/etc/ssl/certs
+      - sock:/sock
       - type: volume
         source: app_data
         target: /var/www/html
@@ -90,8 +90,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       HOSTNAME: ${HOSTNAME}
     volumes:
-      - certbot-etc: /etc/letsencrypt
-      - certbot-var: /var/lib/letsencrypt
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
       - type: volume
         source: app_data
         target: /var/www/html
@@ -101,9 +101,8 @@ services:
 volumes:
   certbot-etc:
   certbot-var:
-    driver: local
-
   mysqldata:
+  sock:
     driver: local
 
   app_data:
@@ -112,9 +111,6 @@ volumes:
       type: none
       device: "${ROOT_PROJECT}src"
       o: bind
-
-  sock:
-    driver: local
 
   dhparam:
     driver: local
