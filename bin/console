@@ -476,7 +476,7 @@ restart)
   restart
   ;;
 
-cerbot)
+certbot)
   generateCertificates
   ;;
 
