@@ -83,15 +83,6 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
   && pecl install -o -f redis \
   && docker-php-ext-enable redis.so  \
   && pecl clear-cache \
-  # Create log folders
-  && mkdir -p /var/log/php-fpm \
-  && touch /var/log/php-fpm/access.log \
-  && touch /var/log/php-fpm/error.log \
-  && chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm \
-  #configure nginx - fpm socket
-  && mkdir -p /sock \
-  && touch /sock/docker.sock \
-  && chown -R ${WEB_USER}:${WEB_USER} /sock \
   # Install xdebug
   && if [ "${ENVIROMENT}" = "developer" ]; then \
     apk add --no-cache $PHPIZE_DEPS \
@@ -101,7 +92,16 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
 
 RUN addgroup -g 3000 -S ${WEB_USER} \
   && adduser -u 3000 -h -S -D -G ${WEB_USER} ${WEB_USER} \
-  && mkdir -p /home/${WEB_USER}/html
+  && mkdir -p /home/${WEB_USER}/html \
+  # Create log folders
+  && mkdir -p /var/log/php-fpm \
+  && touch /var/log/php-fpm/access.log \
+  && touch /var/log/php-fpm/error.log \
+  && chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm \
+  #configure nginx - fpm socket
+  && mkdir -p /sock \
+  && touch /sock/docker.sock \
+  && chown -R ${WEB_USER}:${WEB_USER} /sock \
 
 WORKDIR /home/${WEB_USER}/html
 
