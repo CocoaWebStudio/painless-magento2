@@ -85,6 +85,8 @@ services:
     container_name: certbot
     build:
       context: ./config/certbot
+      args:
+        WEB_USER: ${WEB_USER}
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       HOSTNAME: ${HOSTNAME}

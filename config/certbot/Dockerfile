@@ -1,5 +1,7 @@
 FROM certbot/certbot
 
+ARG WEB_USER=www-data
+
 ENV ADMIN_EMAIL=johndoe@example.com
 ENV HOSTNAME=magedocker.test
 
