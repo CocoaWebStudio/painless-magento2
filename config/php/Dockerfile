@@ -90,7 +90,8 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
     && docker-php-ext-enable xdebug ; \
   fi
 
-RUN addgroup -g 3000 -S ${WEB_USER} \
+RUN mkdir -p /home/${WEB_USER} \
+  && addgroup -g 3000 -S ${WEB_USER} \
   && adduser -u 3000 -h -S -D -G ${WEB_USER} ${WEB_USER} \
   && mkdir -p /home/${WEB_USER}/html \
   # Create log folders
