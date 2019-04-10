@@ -28,6 +28,12 @@ server {
         deny all;
     }
 
+    location ~ /.well-known/acme-challenge
+    {
+      allow all;
+      root /var/www/html;
+    }
+
 
     # PHP entry point for setup application
     location ~* ^/setup($|/) {
