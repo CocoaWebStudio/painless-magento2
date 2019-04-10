@@ -476,6 +476,10 @@ restart)
   restart
   ;;
 
+cerbot)
+  generateCertificates
+  ;;
+
 stop)
   stop
   ;;
