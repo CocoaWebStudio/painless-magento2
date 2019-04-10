@@ -43,6 +43,7 @@ services:
       args:
         ENVIROMENT: ${ENVIROMENT}
         WEB_USER: ${WEB_USER}
+        U_ID: ${U_ID}
     volumes:
       - sock:/sock
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
@@ -62,6 +63,7 @@ services:
       context: ./config/nginx
       args:
         WEB_USER: ${WEB_USER}
+        U_ID: ${U_ID}
     ports:
       - "80:80"
       - "443:443"
@@ -85,6 +87,8 @@ services:
     container_name: certbot
     build:
       context: ./config/certbot
+      args:
+        U_ID: ${U_ID}
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       HOSTNAME: ${HOSTNAME}

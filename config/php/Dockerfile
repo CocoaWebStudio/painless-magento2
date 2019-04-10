@@ -1,5 +1,6 @@
 FROM php:7.2-fpm-alpine
 
+ARG U_ID=33
 ARG WEB_USER=www-data
 ARG ENVIROMENT=production
 
@@ -90,10 +91,9 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
     && docker-php-ext-enable xdebug ; \
   fi
 
-RUN mkdir -p /home/${WEB_USER} \
-  && addgroup -g 3000 -S ${WEB_USER} \
-  && adduser -u 3000 -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
-  && mkdir -p /home/${WEB_USER}/html \
+RUN mkdir -p /home/${WEB_USER}/html \
+  && addgroup -g $U_ID -S ${WEB_USER} \
+  && adduser -u $U_ID -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
   # Create log folders
   && mkdir -p /var/log/php-fpm \
   && touch /var/log/php-fpm/access.log \
@@ -105,7 +105,5 @@ RUN mkdir -p /home/${WEB_USER} \
   && chown -R ${WEB_USER}:${WEB_USER} /sock
 
 WORKDIR /home/${WEB_USER}/html
-
-RUN chown -R ${WEB_USER}:${WEB_USER} .
 
 USER ${WEB_USER}
