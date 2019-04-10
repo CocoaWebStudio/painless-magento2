@@ -48,7 +48,7 @@ services:
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
       - type: volume
         source: app_data
-        target: /var/www/html
+        target: /home/${WEB_USER}/html
     depends_on:
       - mysql
       - cache
@@ -74,7 +74,7 @@ services:
       - sock:/sock
       - type: volume
         source: app_data
-        target: /var/www/html
+        target: /home/${WEB_USER}/html
     depends_on:
       - php
     networks:
@@ -93,14 +93,15 @@ services:
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-      - certbot-html:/var/www/html
+      - type: volume
+        source: app_data
+        target: /home/${WEB_USER}/html
     depends_on:
       - web
 
 volumes:
   certbot-etc:
   certbot-var:
-  certbot-html:
   mysqldata:
   sock:
     driver: local
@@ -109,14 +110,14 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: "${ROOT_PROJECT}src"
+      device: "${ROOT_PROJECT}/src"
       o: bind
 
   dhparam:
     driver: local
     driver_opts:
       type: none
-      device: "${ROOT_PROJECT}config/dhparam"
+      device: "${ROOT_PROJECT}/config/dhparam"
       o: bind
 
 networks:

@@ -221,14 +221,14 @@ applyCertificates() {
 
     generateDHparam
 
-    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   else
     # generate a SSL certificate
     generateSSLCertificate
     if [ $? -ne 0 ]; then
       exit 1
     fi
-    sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
     # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
   fi
 
@@ -262,7 +262,7 @@ applyCertificates() {
 installMagento() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
-  sed "s|\$HOSTNAME|$HOSTNAME|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+  sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
 
   restart
 

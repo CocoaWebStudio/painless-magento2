@@ -9,7 +9,7 @@ server {
 
     client_max_body_size        10M;
 
-    set                         $MAGE_ROOT /var/www/html;
+    set                         $MAGE_ROOT /home/$WEB_USER/html;
 
     root $MAGE_ROOT/pub;
 
@@ -28,7 +28,7 @@ server {
       default_type "text/plain";
       rewrite /.well-known/acme-challenge/(.*) /$1 break;
       allow all;
-      root /var/www/html;
+      root $MAGE_ROOT;
     }
 
 

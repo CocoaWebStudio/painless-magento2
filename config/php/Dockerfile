@@ -26,8 +26,6 @@ COPY php.ini /usr/local/etc/php/php.ini
 
 RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
   && chown root:root /usr/local/etc/php/php.ini \
-  && addgroup -g 3000 -S ${WEB_USER} \
-  && adduser -u 3000 -S -D -G ${WEB_USER} ${WEB_USER} \
   && apk add --no-cache git \
   # persistent / runtime deps
   && apk add --no-cache --virtual .persistent-deps \
@@ -99,9 +97,14 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
     apk add --no-cache $PHPIZE_DEPS \
     && pecl install xdebug-2.7.1 \
     && docker-php-ext-enable xdebug ; \
-  fi \
-  # Set magento's prmissions for WEB_USER
-  && mkdir -p /var/www/html \
-  && chown -R ${WEB_USER}:${WEB_USER} /var/www/html
+  fi
+
+RUN addgroup -g 3000 -S ${WEB_USER} \
+  && adduser -u 3000 -h -S -D -G ${WEB_USER} ${WEB_USER} \
+  && mkdir -p /home/${WEB_USER}/html
+
+WORKDIR /home/${WEB_USER}/html
+
+RUN chown -R ${WEB_USER}:${WEB_USER} .
 
 USER ${WEB_USER}
