@@ -85,14 +85,12 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
   && pecl install -o -f redis \
   && docker-php-ext-enable redis.so  \
   && pecl clear-cache \
-  # Set WEB_USER as owner for /var/www
-  && chown -R ${WEB_USER}:${WEB_USER} /var/www/ \
-  && chmod -R g+w /var/www/ \
   # Create log folders
   && mkdir -p /var/log/php-fpm \
   && touch /var/log/php-fpm/access.log \
   && touch /var/log/php-fpm/error.log \
   && chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm \
+  #configure nginx - fpm socket
   && mkdir -p /sock \
   && touch /sock/docker.sock \
   && chown -R ${WEB_USER}:${WEB_USER} /sock \
@@ -101,6 +99,12 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
     apk add --no-cache $PHPIZE_DEPS \
     && pecl install xdebug-2.7.1 \
     && docker-php-ext-enable xdebug ; \
-  fi
+  fi \
+  # Set magento's prmissions for WEB_USER
+  && cd /var/www/html \
+  && chown -R ${WEB_USER}:${WEB_USER} /var/www/html \
+  && find var vendor pub/static pub/media app/etc -type f -exec chmod u+w {} \; \
+  && find var vendor pub/static pub/media app/etc -type d -exec chmod u+w {} \; \
+  && chmod u+x bin/magento
 
 USER ${WEB_USER}

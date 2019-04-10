@@ -49,7 +49,6 @@ services:
       - type: volume
         source: app_data
         target: /var/www/html
-    env_file: .env
     depends_on:
       - mysql
       - cache
