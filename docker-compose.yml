@@ -94,7 +94,7 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - type: volume
         source: app_data
-        target: /var/www/html
+        target: /var/www/html/mage
     depends_on:
       - web
 

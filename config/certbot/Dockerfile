@@ -4,7 +4,7 @@ ENV ADMIN_EMAIL=johndoe@example.com
 ENV HOSTNAME=magedocker.test
 
 CMD certbot certonly --webroot \
-  -w /var/www/html \
+  -w /var/www//mage \
   --email ${ADMIN_EMAIL} \
   --agree-tos --no-eff-email \
   --staging \
