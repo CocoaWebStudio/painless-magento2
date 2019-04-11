@@ -138,15 +138,7 @@ executeInMagento() {
   docker-compose exec -u ${WEB_USER} php sh -c "bin/magento $*"
 }
 
-#######################################
-# Generate new SSL certificates
-# Globals:
-#   SSLKEYFILEPATH
-
-# Returns:
-#   None
-#######################################
-generateSSLCertificate() {
+generateLocalSSL() {
 
   # assemble file paths for key and cert
   SSLKEYFILEPATH="$SSLCERTIFICATEFOLDER/key.pem"
@@ -223,8 +215,7 @@ applyCertificates() {
 
     sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   else
-    # generate a SSL certificate
-    generateSSLCertificate
+    generateLocalSSL
     if [ $? -ne 0 ]; then
       exit 1
     fi
@@ -237,28 +228,12 @@ applyCertificates() {
   docker-compose stop web
   docker-compose up -d --no-deps --remove-orphans --build web
 
+  executeInMagento cache:flush
+
   echo "Done, pleaase test https://$HOSTNAME"
   return 0
 }
 
-#######################################
-# Install Magento
-# Globals:
-#   DATABASE_NAME
-#   DATABASE_USER
-#   DATABASE_PASSWORD
-#   ADMIN_USERNAME
-#   ADMIN_FIRSTNAME
-#   ADMIN_LASTNAME
-#   ADMIN_EMAIL
-#   ADMIN_PASSWORD
-#   DEFAULT_LANGUAGE
-#   DEFAULT_CURRENCY
-#   DEFAULT_TIMEZONE
-#   BACKEND_FRONTNAME
-# Returns:
-#   None
-#######################################
 installMagento() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
@@ -266,7 +241,7 @@ installMagento() {
 
   restart
 
-  echo "Docker process complete"
+  echo "Docker process complete, starting magento instalation"
 
   # Delete config before install
   rm -f src/app/etc/env.php
@@ -316,11 +291,11 @@ installMagento() {
   # Compile the code
   executeInMagento setup:di:compile
 
-  # Clear cache
-  executeInMagento cache:flush
-
   # Deploy static content
   executeInMagento setup:static-content:deploy -f
+
+  echo "Adding SSL certification"
+  applyCertificates
 
   # Index data
   executeInMagento indexer:reindex
@@ -328,7 +303,7 @@ installMagento() {
   # Print results
   echo "the enviroment is ${ENVIROMENT}"
   echo "Installation complete."
-  printf "%-15s%-30s\n" "Frontend" $baseURLInsecure
+  printf "%-15s%-30s\n" "Frontend" $baseURLSecure
   printf "%-15s%-30s\n" "Backend" $backendURL
   printf "%-15s%s: %s\n" "" "Username" ${ADMIN_USERNAME}
   printf "%-15s%s: %s\n" "" "Password" ${ADMIN_PASSWORD}
