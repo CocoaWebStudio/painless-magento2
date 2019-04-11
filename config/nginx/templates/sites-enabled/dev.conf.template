@@ -28,13 +28,11 @@ server {
         deny all;
     }
 
-    location ^~ /.well-known/acme-challenge/ {
-      default_type "text/plain";
-      rewrite /.well-known/acme-challenge/(.*) /$1 break;
+    location ^~ /.well-known {
+      alias $MAGE_ROOT/.well-known/;
+      auth_basic off;
       allow all;
-      root $MAGE_ROOT;
     }
-
 
     # PHP entry point for setup application
     location ~* ^/setup($|/) {

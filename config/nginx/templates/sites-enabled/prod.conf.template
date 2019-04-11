@@ -9,11 +9,10 @@ server
   listen [::]:80;
   server_name $HOSTNAME www.$HOSTNAME;
 
-  location ^~ /.well-known/acme-challenge/ {
-    default_type "text/plain";
-    rewrite /.well-known/acme-challenge/(.*) /$1 break;
+  location ^~ /.well-known {
+    alias /home/$WEB_USER/html/.well-known/;
+    auth_basic off;
     allow all;
-    root /home/$WEB_USER/html;
   }
 
   location /
