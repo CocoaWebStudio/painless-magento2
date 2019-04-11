@@ -243,19 +243,8 @@ applyCertificates() {
 }
 
 installMagento() {
-  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
-  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
-  sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
-
-  restart
-
-  echo "Docker process complete, starting magento instalation"
-
   # Delete config before install
   rm -f src/app/etc/env.php
-
-  # wait for MySQL to come up
-  sleep 20
 
   # Install magento 2
   baseURLInsecure="http://${HOSTNAME}/"
@@ -302,11 +291,26 @@ installMagento() {
   # Deploy static content
   executeInMagento setup:static-content:deploy -f
 
-  echo "Adding SSL certification"
-  applyCertificates
-
   # Index data
   executeInMagento indexer:reindex
+}
+
+Totalinstallation() {
+  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
+  sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
+  sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+
+  restart
+
+  echo "Docker process complete, starting magento instalation"
+
+  # wait for MySQL to come up
+  sleep 20
+
+  installMagento
+
+  echo "Adding SSL certification"
+  applyCertificates
 
   # Print results
   echo "the enviroment is ${ENVIROMENT}"
@@ -438,12 +442,16 @@ usage() {
 case "$1" in
 install)
   shift 1
-  installMagento $*
+  Totalinstallation $*
   ;;
 
 mage)
   shift 1
   executeInMagento $*
+  ;;
+
+reinstall)
+  installMagento
   ;;
 
 start)
