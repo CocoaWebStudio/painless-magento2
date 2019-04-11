@@ -9,4 +9,4 @@ config/nginx/sites-enabled/*
 .env
 config/nginx/nginx.conf
 config/php/zz-docker.conf
-
+config/certbot/ssl_renew.sh

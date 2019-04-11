@@ -230,6 +230,14 @@ applyCertificates() {
 
   executeInMagento cache:flush
 
+  # Set a cronjob for auto-renew certificates
+  sed "s|\$PROJECTPATH|$PROJECTPATH|g" "$CONFIGFOLDER/certbot/ssl_renew.sh.template" >"$CONFIGFOLDER/certbot/ssl_renew.sh"
+  chmod +x $CONFIGFOLDER/certbot/ssl_renew.sh
+
+  echo "0 3 1 * * $CONFIGFOLDER/certbot/ssl_renew.sh >/dev/null 2>&1" >> mycron
+  crontab mycron
+  rm mycron
+
   echo "Done, pleaase test https://$HOSTNAME"
   return 0
 }
