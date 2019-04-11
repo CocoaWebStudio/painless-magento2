@@ -280,7 +280,7 @@ installMagento() {
   backendURL="https://${HOSTNAME}/${BACKEND_FRONTNAME}"
   executeInMagento setup:install \
     --cleanup-database \
-    --base-url=${baseURLSecure} \
+    --base-url=${baseURLInsecure} \
     --use-secure=0 \
     --use-secure-admin=0 \
     --backend-frontname=${BACKEND_FRONTNAME} \

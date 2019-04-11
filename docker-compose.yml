@@ -85,14 +85,7 @@ services:
 
   certbot:
     container_name: certbot
-    build:
-      context: ./config/certbot
-      args:
-        U_ID: ${U_ID}
-    environment:
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      HOSTNAME: ${HOSTNAME}
-      WEB_USER: ${WEB_USER}
+    image: certbot/certbot
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
@@ -101,9 +94,14 @@ services:
         target: /home/${WEB_USER}/html
     depends_on:
       - web
+    user: ${WEB_USER}
+    command: [ "certonly", "--webroot", "--webroot-path=/home/${WEB_USER}/html", "--email", "${ADMIN_EMAIL}", "--agree-tos", "--no-eff-email", "--staging", "-d", "${HOSTNAME}" ]
 
 volumes:
   certbot-etc:
+    driver: local
+    user: ${WEB_USER}
+
   certbot-var:
   mysqldata:
   sock:
