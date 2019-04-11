@@ -99,9 +99,6 @@ services:
 
 volumes:
   certbot-etc:
-    driver: local
-    user: ${WEB_USER}
-
   certbot-var:
   mysqldata:
   sock:
