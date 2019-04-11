@@ -93,3 +93,54 @@ After customizing the parameters just run trigger the installation with `bin/con
 
 dockerize-magento2 is licensed under the Apache License, Version 2.0.
 See [LICENSE](LICENSE) for the full license text.
+
+## references
+
+starting point and base of this project: 
+
+https://github.com/arvatoSCM/dockerize-magento2
+
+
+use docker in windows home: 
+
+https://medium.freecodecamp.org/how-to-set-up-docker-and-windows-subsystem-for-linux-a-love-story-35c856968991
+
+
+docker-compose file reference: 
+
+https://docs.docker.com/compose/compose-file/
+
+
+Handling permissions with docker volumes: 
+
+https://denibertovic.com/posts/handling-permissions-with-docker-volumes/
+
+
+docker nginx, let's encrypt configuration: 
+
+https://www.digitalocean.com/community/tutorials/how-to-secure-a-containerized-node-js-application-with-nginx-let-s-encrypt-and-docker-compose
+
+
+Add users in alpine linux: 
+https://stackoverflow.com/questions/49955097/how-do-i-add-a-user-when-im-using-alpine-as-a-base-image
+
+
+Redis configuration: 
+
+https://devdocs.magento.com/guides/v2.3/config-guide/redis/redis-session.html
+
+https://devdocs.magento.com/guides/v2.3/config-guide/redis/redis-pg-cache.html
+
+
+
+
+magento cli instalation guide:
+
+https://devdocs.magento.com/guides/v2.3/install-gde/install/cli/install-cli-install.html#instgde-install-cli-magento
+
+
+set cronjob in bash file: 
+
+https://www.digitalocean.com/community/tutorials/how-to-secure-a-containerized-node-js-application-with-nginx-let-s-encrypt-and-docker-compose
+
+
