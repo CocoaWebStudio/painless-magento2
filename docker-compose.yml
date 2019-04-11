@@ -95,7 +95,7 @@ services:
     depends_on:
       - web
     user: ${WEB_USER}
-    command: [ "certonly", "--webroot", "--webroot-path=/home/${WEB_USER}/html", "--email", "${ADMIN_EMAIL}", "--agree-tos", "--no-eff-email", "--staging", "-d", "${HOSTNAME}" ]
+    command: [ "certonly", "--webroot", "--webroot-path=/home/${WEB_USER}/html", "--email", "${ADMIN_EMAIL}", "--agree-tos", "--no-eff-email", "--force-renewal", "-d", "${HOSTNAME}" ]
 
 volumes:
   certbot-etc:
