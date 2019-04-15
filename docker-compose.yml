@@ -10,6 +10,7 @@ services:
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
       - mysqldata:/var/lib/mysql
+      - backups:/backups
     expose:
       - 3306
     restart: always
@@ -102,6 +103,13 @@ volumes:
   mysqldata:
   sock:
     driver: local
+
+  backups:
+    driver: local
+    driver_opts:
+      type: none
+      device: "${ROOT_PROJECT}/config/mariadb/backups"
+      o: bind
 
   app_data:
     driver: local
