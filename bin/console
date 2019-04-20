@@ -250,13 +250,17 @@ applyCertificates() {
 }
 
 installMagento() {
-  # Delete config before install
+  echo "Delete config before install"
   rm -f src/app/etc/env.php
 
+  echo "Remove old genereted code"
+  rm -Rf src/generated/code/Magento
+
   # Install magento 2
+  echo "Install magento 2"
+
   baseURLInsecure="http://${HOSTNAME}/"
-  baseURLSecure="https://${HOSTNAME}/"
-  backendURL="https://${HOSTNAME}/${BACKEND_FRONTNAME}"
+
   executeInMagento setup:install \
     --cleanup-database \
     --base-url=${baseURLInsecure} \
@@ -283,16 +287,13 @@ installMagento() {
     --cache-backend-redis-server=${NETWORK_BASE}.7 \
     --cache-backend-redis-db=0
 
-  # Install and update modules
+  echo "Install and update modules"
   executeInMagento setup:upgrade
 
-  # Remove old genereted code
-  rm -R $PROJECTPATH/src/generated/code/Magento
-
-  # Set enviroment
+  echo "Set enviroment"
   executeInMagento deploy:mode:set ${ENVIROMENT}
 
-  # Compile the code
+  echo "Compile the code"
   executeInMagento setup:di:compile
 
   # Deploy static content
@@ -312,18 +313,18 @@ Totalinstallation() {
   echo "Docker process complete, starting magento instalation"
 
   # wait for MySQL to come up
-  sleep 20
+  sleep 30
 
   installMagento
 
   echo "Adding SSL certification"
-  applyCertificates
+ # applyCertificates
 
   # Print results
   echo "the enviroment is ${ENVIROMENT}"
   echo "Installation complete."
-  printf "%-15s%-30s\n" "Frontend" $baseURLSecure
-  printf "%-15s%-30s\n" "Backend" $backendURL
+  printf "%-15s%-30s\n" "Frontend" ${baseURLInsecure}
+  printf "%-15s%-30s\n" "Backend" "//${HOSTNAME}/${BACKEND_FRONTNAME}"
   printf "%-15s%s: %s\n" "" "Username" ${ADMIN_USERNAME}
   printf "%-15s%s: %s\n" "" "Password" ${ADMIN_PASSWORD}
 }
