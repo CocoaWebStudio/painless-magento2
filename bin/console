@@ -452,9 +452,9 @@ isRunning() {
 #   None
 #######################################
 usage() {
-  echo "Dockerized Magento 2 painless environment ready for development or production"
+  echo "PAINLESS MAGENTO 2"
+  echo "A dockerized environment ready for development or production"
   echo ""
-  echo "------------------"
   echo "Important!"
   echo "You need fill the .env file before use this script"
   echo "run"
@@ -462,7 +462,6 @@ usage() {
   echo "    cp .env.sample .env"
   echo ""
   echo "Open the .env file and fill each variable."
-  echo "------------------"
   echo ""
   echo "Usage:"
   echo "$SCRIPTNAME <action> <arguments...>"
