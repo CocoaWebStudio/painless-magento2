@@ -45,6 +45,11 @@ services:
         ENVIROMENT: ${ENVIROMENT}
         WEB_USER: ${WEB_USER}
         U_ID: ${U_ID}
+        MAGE_DOMAIN: ${MAGE_DOMAIN}
+        SMTP_SERVER: ${SMTP_SERVER}
+        SMTP_PORT: ${SMTP_PORT}
+        SMTP_USER: ${SMTP_USER}
+        SMTP_PASS: ${SMTP_PASS}
     volumes:
       - sock:/sock
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
@@ -95,7 +100,7 @@ services:
         target: /home/${WEB_USER}/html
     depends_on:
       - web
-    command: [ "certonly", "--webroot", "--webroot-path=/home/${WEB_USER}/html", "--email", "${ADMIN_EMAIL}", "--agree-tos", "--no-eff-email", "--force-renewal", "-d", "${HOSTNAME}" ]
+    command: [ "certonly", "--webroot", "--webroot-path=/home/${WEB_USER}/html", "--email", "${ADMIN_EMAIL}", "--agree-tos", "--no-eff-email", "--force-renewal", "-d", "${MAGE_DOMAIN}" ]
 
 volumes:
   certbot-etc:

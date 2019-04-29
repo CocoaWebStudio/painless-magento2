@@ -1,8 +1,16 @@
 FROM php:7.2-fpm-alpine
 
-ARG U_ID=33
+ARG U_ID=82
 ARG WEB_USER=www-data
 ARG ENVIROMENT=production
+ARG MAGE_DOMAIN=magedocker.test
+ARG SMTP_SERVER=smtp.mailtrap.io
+ARG SMTP_PORT=2525
+ARG SMTP_USER=Your_User
+ARG SMTP_PASS=Your_Password
+
+COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY php.ini /usr/local/etc/php/php.ini
 
 ENV PHPIZE_DEPS \
   autoconf \
@@ -20,42 +28,57 @@ ENV PHPIZE_DEPS \
   libpng-dev  \
   libjpeg-turbo-dev
 
-ENV PHP_REDIS_VERSION 4.2.0
-
-COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-COPY php.ini /usr/local/etc/php/php.ini
-
-RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
-  && chown root:root /usr/local/etc/php/php.ini \
-  && apk add --no-cache git \
-  # persistent / runtime deps
+RUN mkdir /etc/ssmtp \
+  # email sender configuration
+  && echo "root=${EMAIL_SENDER}" > /etc/ssmtp/ssmtp.conf \
+  && echo "mailhub=${SMTP_SERVER}:${SMTP_PORT}" >> /etc/ssmtp/ssmtp.conf \
+  && echo "FromLineOverride=YES" >> /etc/ssmtp/ssmtp.conf \
+  && echo "AuthUser=${SMTP_USER}" >> /etc/ssmtp/ssmtp.conf \
+  && echo "AuthPass=${SMTP_PASS}" >> /etc/ssmtp/ssmtp.conf \
+  # permissions
+  && chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
+    /usr/local/etc/php/php.ini \
+    /etc/ssmtp/ssmtp.conf \
+  && addgroup -g $U_ID -S ${WEB_USER} \
+  && adduser -u $U_ID -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
+  && mkdir -p /home/${WEB_USER}/html \
+  #configure nginx - fpm socket and log
+  && mkdir -p /sock \
+  && touch /sock/docker.sock \
+  && mkdir -p /var/log/php-fpm \
+  && touch /var/log/php-fpm/access.log \
+  && touch /var/log/php-fpm/error.log \
+  && chown -R ${WEB_USER}:${WEB_USER} /sock \
+    /var/log/php-fpm \
+  # install persistent deps
   && apk add --no-cache --virtual .persistent-deps \
-  automake \
-  # for intl extension
-  icu-dev \
-  icu-libs \
-  # for soap
-  libxml2-dev \
-  libxml2-utils \
-  # for amqp
-  libressl-dev \
-  # for GD
-  freetype \
-  libpng \
-  libjpeg-turbo \
-  libzip-dev \
-  zip \
-  zlib-dev \
-  libmcrypt \
-  libxslt-dev \
-  libwebp-dev \
-  openssh-client \
-  patch \
-  perl \
-  shadow \
-  ssmtp \
+    automake \
+    bash \
+    # for intl extension
+    icu-dev \
+    icu-libs \
+      # for GD
+    freetype \
+    libpng  \
+    libjpeg-turbo \
+    # for soap
+    libxml2-dev \
+    libxml2-utils \
+    libzip-dev \
+    libmcrypt \
+    libxslt-dev \
+    libwebp-dev \
+    patch \
+    perl \
+    shadow \
+    # email
+    ssmtp \
+  # install build deps
   && apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
+  # php extensions
+  # the extensions: ctype, curl, dom, hash, iconv, mbstring, openssl, simplexml, spl, libxml
+  # required by magento are already installed
   && docker-php-ext-configure gd \
     --with-gd \
     --with-freetype-dir=/usr/include/ \
@@ -69,15 +92,12 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
   && docker-php-ext-configure mbstring --enable-mbstring \
   && docker-php-ext-configure soap --enable-soap \
   && docker-php-ext-install -j$(nproc) \
-    gd \
     bcmath \
+    gd \
     intl \
-    pcntl \
-    mysqli \
+    opcache \
     pdo_mysql \
-    mbstring \
     soap \
-    iconv \
     xsl \
     zip \
   # install redis
@@ -90,19 +110,6 @@ RUN chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
     && pecl install xdebug-2.7.1 \
     && docker-php-ext-enable xdebug ; \
   fi
-
-RUN mkdir -p /home/${WEB_USER}/html \
-  && addgroup -g $U_ID -S ${WEB_USER} \
-  && adduser -u $U_ID -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
-  # Create log folders
-  && mkdir -p /var/log/php-fpm \
-  && touch /var/log/php-fpm/access.log \
-  && touch /var/log/php-fpm/error.log \
-  && chown -R ${WEB_USER}:${WEB_USER} /var/log/php-fpm \
-  #configure nginx - fpm socket
-  && mkdir -p /sock \
-  && touch /sock/docker.sock \
-  && chown -R ${WEB_USER}:${WEB_USER} /sock
 
 WORKDIR /home/${WEB_USER}/html
 
