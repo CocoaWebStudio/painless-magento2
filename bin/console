@@ -128,7 +128,6 @@ hash docker-compose 2>/dev/null || {
 #   None
 #######################################
 executeInMagento() {
-
   if [ $(isRunning) = false ]; then
     echo >&2 "Docker is not running. Please start the containers first."
     exit 1
@@ -139,7 +138,6 @@ executeInMagento() {
 }
 
 generateLocalSSL() {
-
   # assemble file paths for key and cert
   SSLKEYFILEPATH="$SSLCERTIFICATEFOLDER/key.pem"
   SSLCERTFILEPATH="$SSLCERTIFICATEFOLDER/cert.pem"
@@ -220,10 +218,7 @@ applyCertificates() {
       exit 1
     fi
     sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
-    # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
   fi
-
-  sleep 10
 
   docker-compose stop web
   docker-compose up -d --no-deps --remove-orphans --build web
@@ -303,14 +298,38 @@ installMagento() {
   executeInMagento indexer:reindex
 }
 
-Totalinstallation() {
+#######################################
+# Create all configuration files, create the containers and install magento
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+build() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
   sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
 
-  restart
+  stop
+  docker-compose -f ${DOCKERCOMPOSEFILE} up -d --build
 
-  echo "Docker process complete, starting magento instalation"
+  # Print results
+  echo "All containers created"
+}
+
+#######################################
+# Create all configuration files, create the containers, install magento and add the ssl certificates
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+Totalinstallation() {
+  build
 
   # wait for MySQL to come up
   sleep 30
@@ -318,7 +337,7 @@ Totalinstallation() {
   installMagento
 
   echo "Adding SSL certification"
- # applyCertificates
+  applyCertificates
 
   # Print results
   echo "the enviroment is ${ENVIROMENT}"
@@ -378,7 +397,6 @@ stop() {
 #   None
 #######################################
 start() {
-
   if [ $(isRunning) = true ]; then
     echo >&2 "The component are already running"
     exit 1
@@ -405,7 +423,7 @@ restart() {
 }
 
 #######################################
-# Check if the docker-components are running
+# Check what containers are running
 # Globals:
 #   DOCKERCOMPOSEFILE
 # Arguments:
@@ -434,61 +452,61 @@ isRunning() {
 #   None
 #######################################
 usage() {
-  echo "Utility for controlling dockerized Magento projects"
+  echo "Dockerized Magento 2 painless environment ready for development or production"
+  echo ""
+  echo "------------------"
+  echo "Important!"
+  echo "You need fill the .env file before use this script"
+  echo "run"
+  echo ""
+  echo "    cp .env.sample .env"
+  echo ""
+  echo "Open the .env file and fill each variable."
+  echo "------------------"
+  echo ""
   echo "Usage:"
   echo "$SCRIPTNAME <action> <arguments...>"
   echo ""
   echo "Actions:"
-  printf "  %-30s%-30s\n" "install" "Installation of nginx, php7.2, mariadb, redis, let's encrypt and magento. "
-  printf "  %-30s%-30s\n" "exec <magento:function>" "Execute bin/magento inside docker"
-  printf "  %-30s%-30s\n" "start" "Start the server and all of its components"
-  printf "  %-30s%-30s\n" "restart" "Restart the server"
+  printf "  %-30s%-30s\n" "install" "Installation of nginx, php7.2, mariadb, redis, let's encrypt and ssmtp. "
+  printf "  %-30s%-30s\n" "mage <magento:function>" "Execute bin/magento inside docker"
+  printf "  %-30s%-30s\n" "start" "Start all containers"
+  printf "  %-30s%-30s\n" "rebuilt" "Rebuild containers"
+  printf "  %-30s%-30s\n" "restart" "Restart all"
   printf "  %-30s%-30s\n" "stop" "Stop the server"
   printf "  %-30s%-30s\n" "status" "Get the current server status"
+  printf "  %-30s%-30s\n" "ssl" "Apply or renew SSL certificates self signed for development or let's encrypt for production"
 }
 
 case "$1" in
-install)
-  shift 1
-  Totalinstallation $*
+  install)
+    shift 1
+    Totalinstallation $*
   ;;
-
-mage)
-  shift 1
-  executeInMagento $*
+  mage)
+    shift 1
+    executeInMagento $*
   ;;
-
-reinstall)
-  installMagento
+  start)
+    start
   ;;
-
-start)
-  start
+  restart)
+    restart
   ;;
-
-restart)
-  restart
+  ssl)
+    applyCertificates
   ;;
-
-ssl)
-  applyCertificates
+  stop)
+    stop
   ;;
-
-stop)
-  stop
+  status)
+    status
   ;;
-
-status)
-  status
+  rebuild)
+    build
   ;;
-
-test)
-  shift 1
-  testAddress $*
-  ;;
-
-*)
-  usage
+  *)
+    usage
   ;;
 esac
 
