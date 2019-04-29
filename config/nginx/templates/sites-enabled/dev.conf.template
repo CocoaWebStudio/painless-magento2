@@ -6,7 +6,7 @@ server {
     listen                      80;
     listen                      443 ssl;
 
-    server_name $HOSTNAME;
+    server_name $MAGE_DOMAIN;
 
     ssl_certificate             /etc/nginx/ssl/cert.pem;
     ssl_certificate_key         /etc/nginx/ssl/key.pem;

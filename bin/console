@@ -146,7 +146,7 @@ generateLocalSSL() {
 
   # check if the certificates already exist
   if [ -f "$SSLKEYFILEPATH" ] && [ -f "$SSLCERTFILEPATH" ]; then
-    echo "Using existing SSL certificates for $HOSTNAME:"
+    echo "Using existing SSL certificates for $MAGE_DOMAIN:"
     printf "  %-8s%-30s\n" "Key:" $SSLKEYFILEPATH
     printf "  %-8s%-30s\n" "Cert:" $SSLCERTFILEPATH
     return 0
@@ -161,7 +161,7 @@ generateLocalSSL() {
     return 1
   }
 
-  openssl req -x509 -newkey rsa:2048 -nodes -subj "/CN=$HOSTNAME" -keyout $SSLKEYFILEPATH -out $SSLCERTFILEPATH -days 360 2>/dev/null
+  openssl req -x509 -newkey rsa:2048 -nodes -subj "/CN=$MAGE_DOMAIN" -keyout $SSLKEYFILEPATH -out $SSLCERTFILEPATH -days 360 2>/dev/null
   if [ $? -ne 0 ]; then
     echo >&2 "Generating SSL certificates failed."
     echo >&2 "Please place the key and certificate into the certificate-folder \"$SSLCERTIFICATEFOLDER\":"
@@ -171,7 +171,7 @@ generateLocalSSL() {
     return 1
   fi
 
-  echo "Generated new SSL certificates for $HOSTNAME:"
+  echo "Generated new SSL certificates for $MAGE_DOMAIN:"
   printf "  %-8s%-30s\n" "Key:" $SSLKEYFILEPATH
   printf "  %-8s%-30s\n" "Cert:" $SSLCERTFILEPATH
   return 0
@@ -183,7 +183,7 @@ generateDHparam() {
 
   # check if the certificates already exist
   if [ -f "$DHFILEPATH" ]; then
-    echo "Using existing Diffie-Hellman key for $HOSTNAME:"
+    echo "Using existing Diffie-Hellman key for $MAGE_DOMAIN:"
     printf "  %-8s%-30s\n" "Key:" $DHFILEPATH
     return 0
   fi
@@ -202,7 +202,7 @@ generateDHparam() {
     return 1
   fi
 
-  echo "Generated new Diffie-Hellman key for $HOSTNAME:"
+  echo "New Diffie-Hellman key for $MAGE_DOMAIN was generated"
   return 0
 }
 
@@ -213,13 +213,13 @@ applyCertificates() {
 
     generateDHparam
 
-    sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/prod.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   else
     generateLocalSSL
     if [ $? -ne 0 ]; then
       exit 1
     fi
-    sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
     # Start docker containers (docker-compose > v1.6 and docker > v1.10 required)
   fi
 
@@ -229,8 +229,8 @@ applyCertificates() {
   docker-compose up -d --no-deps --remove-orphans --build web
 
   executeInMagento setup:store-config:set \
-    --base-url-secure="https://${HOSTNAME}/" \
-    --base-url="https://${HOSTNAME}/"
+    --base-url-secure="https://${MAGE_DOMAIN}/" \
+    --base-url="https://${MAGE_DOMAIN}/"
 
   executeInMagento cache:flush
 
@@ -245,7 +245,7 @@ applyCertificates() {
   crontab mycron
   rm mycron
 
-  echo "Done, pleaase test https://$HOSTNAME"
+  echo "Done, pleaase test https://$MAGE_DOMAIN"
   return 0
 }
 
@@ -259,7 +259,7 @@ installMagento() {
   # Install magento 2
   echo "Install magento 2"
 
-  baseURLInsecure="http://${HOSTNAME}/"
+  baseURLInsecure="http://${MAGE_DOMAIN}/"
 
   executeInMagento setup:install \
     --cleanup-database \
@@ -306,7 +306,7 @@ installMagento() {
 Totalinstallation() {
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
-  sed "s|\$HOSTNAME|$HOSTNAME|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+  sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
 
   restart
 
@@ -324,7 +324,7 @@ Totalinstallation() {
   echo "the enviroment is ${ENVIROMENT}"
   echo "Installation complete."
   printf "%-15s%-30s\n" "Frontend" ${baseURLInsecure}
-  printf "%-15s%-30s\n" "Backend" "//${HOSTNAME}/${BACKEND_FRONTNAME}"
+  printf "%-15s%-30s\n" "Backend" "//${MAGE_DOMAIN}/${BACKEND_FRONTNAME}"
   printf "%-15s%s: %s\n" "" "Username" ${ADMIN_USERNAME}
   printf "%-15s%s: %s\n" "" "Password" ${ADMIN_PASSWORD}
 }
