@@ -4,7 +4,7 @@ A dockerized magento 2 community environment ready for development or production
 
 It's inspired from [dockerize-magento2](https://github.com/arvatoSCM/dockerize-magento2)
 
-## Advantajes
+## Advantages
 
   1)  All containers run on Alpine Linux. As a result, the images are smaller, faster and all the containers work with the same rules.
   2) Magento is totally independant from `Painless Magento 2`. Magento lives inside the `src` directory. This is a volume in the `php` container, so you can use `Painless Magento 2` to develop stores, websites or Magento extensions. After, you can use the same system for production or take your code from the source directory to use as you need. 
