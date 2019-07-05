@@ -1,5 +1,9 @@
 # Painless Magento 2
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+
+
 A dockerized magento 2 community environment ready for development or production.
 
 It's inspired from [dockerize-magento2](https://github.com/arvatoSCM/dockerize-magento2)
