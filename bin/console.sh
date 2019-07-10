@@ -7,13 +7,9 @@
 # of the current script (e.g. "server")
 SCRIPTNAME="bin/$(basename $0)"
 
-# PROJECTPATH contains the full
-# directory path of the project itself
-PROJECTPATH=$(pwd)
-
 # CONFIGFOLDER contains the path
 # to the config folder.
-CONFIGFOLDER="$PROJECTPATH/config"
+CONFIGFOLDER="$(pwd)/config"
 
 # SSLCERTIFICATEFOLDER contains the path
 # to the SSL certificate folder that is used by Nginx.
@@ -22,7 +18,7 @@ SSLCERTIFICATEFOLDER="$CONFIGFOLDER/nginx/ssl"
 # ENVIRONMENTVARIABLESFILE contains the path
 # to the file that holds the required environment
 # variables for this script.
-ENVIRONMENTVARIABLESFILE="$PROJECTPATH/.env"
+ENVIRONMENTVARIABLESFILE="$(pwd)/.env"
 if [ ! -f $ENVIRONMENTVARIABLESFILE ]; then
   echo >&2 "The file that holds the environment variables was not found at $ENVIRONMENTVARIABLESFILE"
   exit 1
@@ -30,7 +26,7 @@ fi
 
 # DOCKERCOMPOSEFILE contains the path
 # to the docker-compose.yml file
-DOCKERCOMPOSEFILE="$PROJECTPATH/docker-compose.yml"
+DOCKERCOMPOSEFILE="$(pwd)/docker-compose.yml"
 if [ ! -f $DOCKERCOMPOSEFILE ]; then
   echo >&2 "The docker-compose file was not found at $DOCKERCOMPOSEFILE"
   exit 1
@@ -38,6 +34,11 @@ fi
 
 # execute the file that sets the environment variables
 . $ENVIRONMENTVARIABLESFILE
+
+if [ -z "$ROOT_PROJECT"]; then
+  ROOT_PROJECT=$(pwd)
+  exit 1
+fi
 
 # check the environment variables
 if [ -z "$DATABASE_NAME" ]; then
@@ -206,8 +207,8 @@ generateDHparam() {
 
 applyCertificates() {
   if [ $ENVIROMENT = 'production' ]; then
-    docker-compose stop certbot
-    docker-compose up -d --no-deps --remove-orphans --build certbot
+    ROOT_PROJECT=$ROOT_PROJECT docker-compose stop certbot
+    ROOT_PROJECT=$ROOT_PROJECT docker-compose up -d --no-deps --remove-orphans --build certbot
 
     generateDHparam
 
@@ -220,8 +221,8 @@ applyCertificates() {
     sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/dev.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
   fi
 
-  docker-compose stop web
-  docker-compose up -d --no-deps --remove-orphans --build web
+  ROOT_PROJECT=$ROOT_PROJECT docker-compose stop web
+  ROOT_PROJECT=$ROOT_PROJECT docker-compose up -d --no-deps --remove-orphans --build web
 
   executeInMagento setup:store-config:set \
     --base-url-secure="https://${MAGE_DOMAIN}/" \
@@ -230,13 +231,13 @@ applyCertificates() {
   executeInMagento cache:flush
 
   # Set a cronjob for auto-renew certificates
-  sed "s|\$PROJECTPATH|$PROJECTPATH|g" \
+  sed "s|\$(pwd)|$(pwd)|g" \
     "$CONFIGFOLDER/certbot/ssl_renew.sh.template" \
     >"$CONFIGFOLDER/certbot/ssl_renew.sh"
 
   chmod +x $CONFIGFOLDER/certbot/ssl_renew.sh
 
-  echo "0 3 1 * * $CONFIGFOLDER/certbot/ssl_renew.sh >/dev/null 2>&1" >> mycron
+  echo "0 3 1 * * $CONFIGFOLDER/certbot/ssl_renew.sh >/dev/null 2>&1" >>mycron
   crontab mycron
   rm mycron
 
@@ -313,7 +314,7 @@ build() {
   sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
 
   stop
-  docker-compose -f ${DOCKERCOMPOSEFILE} up -d --build
+  ROOT_PROJECT=$ROOT_PROJECT docker-compose -f ${DOCKERCOMPOSEFILE} up -d --build
 
   # Print results
   echo "All containers created"
@@ -381,7 +382,7 @@ stop() {
 
   if [ $(isRunning) = true ]; then
     # stop all docker containers
-    docker-compose -f $DOCKERCOMPOSEFILE down
+    ROOT_PROJECT=$ROOT_PROJECT docker-compose -f $DOCKERCOMPOSEFILE down
   fi
 
 }
@@ -403,7 +404,7 @@ start() {
   fi
 
   # start docker containers
-  docker-compose -f ${DOCKERCOMPOSEFILE} up -d
+  ROOT_PROJECT=$ROOT_PROJECT docker-compose -f ${DOCKERCOMPOSEFILE} up -d
 
 }
 
@@ -478,34 +479,34 @@ usage() {
 }
 
 case "$1" in
-  install)
-    shift 1
-    Totalinstallation $*
+install)
+  shift 1
+  Totalinstallation $*
   ;;
-  mage)
-    shift 1
-    executeInMagento $*
+mage)
+  shift 1
+  executeInMagento $*
   ;;
-  start)
-    start
+start)
+  start
   ;;
-  restart)
-    restart
+restart)
+  restart
   ;;
-  ssl)
-    applyCertificates
+ssl)
+  applyCertificates
   ;;
-  stop)
-    stop
+stop)
+  stop
   ;;
-  status)
-    status
+status)
+  status
   ;;
-  rebuild)
-    build
+rebuild)
+  build
   ;;
-  *)
-    usage
+*)
+  usage
   ;;
 esac
 
