@@ -1,6 +1,6 @@
 FROM php:7.2-fpm-alpine
 
-ARG UID=82
+ARG U_ID=33
 ARG WEB_USER=www-data
 ARG ENVIROMENT=production
 ARG MAGE_DOMAIN=magedocker.test
@@ -39,8 +39,8 @@ RUN mkdir /etc/ssmtp \
   && chown root:root /usr/local/etc/php-fpm.d/zz-docker.conf \
   /usr/local/etc/php/php.ini \
   /etc/ssmtp/ssmtp.conf \
-  && addgroup -g $UID -S ${WEB_USER} \
-  && adduser -u $UID -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
+  && addgroup -g $U_ID -S ${WEB_USER} \
+  && adduser -u $U_ID -h /home/${WEB_USER} -S -D -G ${WEB_USER} ${WEB_USER} \
   && mkdir -p /home/${WEB_USER}/html \
   #configure nginx - fpm socket and log
   && mkdir -p /sock \

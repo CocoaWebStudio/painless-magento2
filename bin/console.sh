@@ -35,7 +35,7 @@ fi
 # execute the file that sets the environment variables
 . $ENVIRONMENTVARIABLESFILE
 
-if [ -z "$ROOT_PROJECT"]; then
+if [ -z "$ROOT_PROJECT" ]; then
   ROOT_PROJECT=$(pwd)
   exit 1
 fi
