@@ -44,7 +44,7 @@ services:
       args:
         ENVIROMENT: ${ENVIROMENT}
         WEB_USER: ${WEB_USER}
-        UID: ${UID}
+        U_ID: ${U_ID}
         MAGE_DOMAIN: ${MAGE_DOMAIN}
         SMTP_SERVER: ${SMTP_SERVER}
         SMTP_PORT: ${SMTP_PORT}
@@ -69,13 +69,14 @@ services:
       context: ./config/nginx
       args:
         WEB_USER: ${WEB_USER}
-        UID: ${UID}
+        U_ID: ${U_ID}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./config/nginx/sites-enabled:/etc/nginx/sites-enabled
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/ssl:/etc/nginx/ssl
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
       - dhparam:/etc/ssl/certs
