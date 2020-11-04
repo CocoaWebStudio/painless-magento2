@@ -1,0 +1,99 @@
+upstream fastcgi_backend {
+   server unix:/sock/docker.sock;
+}
+
+server {
+    listen                      80;
+
+    server_name $MAGE_DOMAIN;
+
+    client_max_body_size        10M;
+
+    set                         $MAGE_ROOT /home/$WEB_USER/html;
+
+    root $MAGE_ROOT/$PUBLIC_DIR;
+
+    location / {
+      index index.php;
+      try_files $uri $uri/ @handler; ## If missing pass the URI to Magento's front handler
+      expires 30d; ## Assume all files are cachable
+    }
+
+    charset UTF-8;
+    error_page 404 403 = /errors/404.php;
+    add_header "X-UA-Compatible" "IE=Edge";
+
+    # Deny access to sensitive files
+    ## These locations would be hidden by .htaccess normally
+    location /app/                { deny all; }
+    location /includes/           { deny all; }
+    location /lib/                { deny all; }
+    location /media/downloadable/ { deny all; }
+    location /pkginfo/            { deny all; }
+    location /report/config.xml   { deny all; }
+    location /var/                { deny all; }
+
+    ## Disable .htaccess and other hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    location @handler { ## Magento uses a common front handler
+        rewrite / /index.php;
+    }
+    location ~ \.php/ { ## Forward paths like /js/index.php/x.js to relevant handler
+        rewrite ^(.*\.php)/ $1 last;
+    }
+
+    location ^~ /.well-known {
+      alias $MAGE_ROOT/.well-known/;
+      auth_basic off;
+      allow all;
+    }
+
+    # PHP entry point for main application
+    location ~ \.php$ {
+      try_files $uri =404;
+      fastcgi_pass   fastcgi_backend;
+      fastcgi_buffers 1024 4k;
+
+      fastcgi_param  PHP_FLAG  "session.auto_start=off \n suhosin.session.cryptua=off";
+      fastcgi_param  PHP_VALUE "memory_limit=756M \n max_execution_time=18000";
+      fastcgi_read_timeout 600s;
+      fastcgi_connect_timeout 600s;
+
+      fastcgi_index  index.php;
+      fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+      fastcgi_param  PATH_INFO $fastcgi_path_info;
+      fastcgi_param  MAGE_RUN_CODE default; ## Store code is defined in administration > Configuration > Manage Stores
+      fastcgi_param  MAGE_RUN_TYPE store;
+      include        fastcgi_params;
+    }
+
+    gzip on;
+    gzip_disable "msie6";
+
+    gzip_comp_level 6;
+    gzip_min_length 1100;
+    gzip_buffers 16 8k;
+    gzip_proxied any;
+    gzip_types
+        text/plain
+        text/css
+        text/js
+        text/xml
+        text/javascript
+        application/javascript
+        application/x-javascript
+        application/json
+        application/xml
+        application/xml+rss
+        image/svg+xml;
+    gzip_vary on;
+
+    # Banned locations (only reached if the earlier PHP entry point regexes don't match)
+    location ~* (\.php$|\.htaccess$|\.git) {
+        deny all;
+    }
+}
