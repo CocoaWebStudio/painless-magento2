@@ -7,6 +7,7 @@
 # of the current script (e.g. "server")
 SCRIPTNAME="bin/$(basename $0)"
 
+
 # CONFIGFOLDER contains the path
 # to the config folder.
 CONFIGFOLDER="$(pwd)/config"
@@ -37,10 +38,8 @@ fi
 
 if [ -z "$ROOT_PROJECT" ]; then
   ROOT_PROJECT=$(pwd)
-  exit 1
 fi
 
-# check the environment variables
 if [ -z "$DATABASE_NAME" ]; then
   echo >&2 "The DATABASE_NAME variable is not set"
   exit 1
@@ -309,9 +308,17 @@ installMagento() {
 #   None
 #######################################
 build() {
+  case "$2" in
+    mage1)
+      sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g; s|\$PUBLIC_DIR|$PUBLIC_DIR|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecureMage1.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+      ;;
+    *)
+    sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+    ;;
+  esac
+
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/nginx.conf.template" >"$CONFIGFOLDER/nginx/nginx.conf"
   sed "s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/php/zz-docker.conf.template" >"$CONFIGFOLDER/php/zz-docker.conf"
-  sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
 
   stop
   ROOT_PROJECT=$ROOT_PROJECT docker-compose -f ${DOCKERCOMPOSEFILE} up -d --build
@@ -503,7 +510,7 @@ status)
   status
   ;;
 rebuild)
-  build
+  build $*
   ;;
 *)
   usage
