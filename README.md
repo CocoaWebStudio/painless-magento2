@@ -1,8 +1,8 @@
-# Painless Magento 2
+# Painless Magento 2 & 1
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A dockerized magento 2 community environment ready for development or production.
+A dockerized magento 2 community environment ready for development or production. It supports magento 1.9.x for development
 
 Inspired from [dockerize-magento2](https://github.com/arvatoSCM/dockerize-magento2)
 
@@ -79,27 +79,27 @@ To start, use `.env.sample` to create this file.
   cp .evn.sample .env
 ```
 
-Open the file and fill each variable. Each variable has values by default, you can use them as it for development but please change all for your installation in production.
+Open the file and fill each variable. Each variable has values by default, you can use them as it for development but please for your own safety change all for your installation in production.
 
-- ### Old Magento 2 projects:
+- ### Old Magento projects:
 
   - take a backup from your data base.
-  - Add your existing Magento 2 code inide the `src` directory.
-  - In the root directory of this project run the installer.
+  - Add your existing Magento 2 code inside the `src` directory.
+  - **Magento 2 only**: In the root directory of this project run the installer.
 
     ```bash
     sh bin/console.sh install
     ```
 
-  - When the instalation is done, connect with the phpadmin you just install and use your data base backup for apply your last version.
+  - Connect with the phpadmin you just install and use your data base backup for apply your last version. Just use the port you set on `.env` file.
 
     - If you prefer, you can use [docker-compose exec](https://docs.docker.com/compose/reference/exec/) comand in the mariadb container and apply your backup using mysql, you should add your backup in the directory `config/backups` it will appears inside container at the address `/backups`
 
     ```bash
-      docker-compose exec mariadb sh -c="mysql -u $DATABASE_USER -p $DATABASE_NAME < /backups/$BACKUP_FILE_NAME"
+      docker-compose exec mysql sh -c="mysql -u $DATABASE_USER -p $DATABASE_NAME < /backups/$BACKUP_FILE_NAME"
     ```
 
-  - Done, you can start to use or develop your old magento 2 project.
+  - Done, you can start to use or develop your old magento project.
 
 - ### Magento 2 from scratch
 
