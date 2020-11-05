@@ -73,6 +73,9 @@ RUN mkdir /etc/ssmtp \
   shadow \
   # email
   ssmtp \
+  openssl-dev \
+  pkgconfig \
+  libressl-dev \
   # install build deps
   && apk add --no-cache --virtual .build-deps \
   $PHPIZE_DEPS \
@@ -103,6 +106,8 @@ RUN mkdir /etc/ssmtp \
   # install redis
   && pecl install -o -f redis \
   && docker-php-ext-enable redis.so  \
+  && pecl install mongodb \
+  && docker-php-ext-enable mongodb.so \
   && pecl clear-cache \
   # Install xdebug
   && if [ "${ENVIROMENT}" = "developer" ]; then \

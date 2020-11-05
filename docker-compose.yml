@@ -33,6 +33,9 @@ services:
     container_name: redis
     image: redis:alpine
     hostname: redis
+    command: redis-server --requirepass ${REDIS_PASS}
+    ports:
+      - "${REDIS_PORT}:6379"
     networks:
       back:
         ipv4_address: ${NETWORK_BASE}.7
