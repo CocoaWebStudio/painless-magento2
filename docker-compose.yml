@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
       - mysqldata:/var/lib/mysql
-      - backups:/backups
+      - ./config/mariadb/backups:/backups
     expose:
       - 3306
     restart: always
@@ -56,9 +56,7 @@ services:
     volumes:
       - sock:/sock
       # - ./config/php/ext-xdebug.ini:/usr/local/etc/php/conf.d/ext-xdebug.ini
-      - type: volume
-        source: app_data
-        target: /home/${WEB_USER}/html
+      - ./src:/home/${WEB_USER}/html
     depends_on:
       - mysql
       - cache
@@ -66,8 +64,8 @@ services:
       back:
         ipv4_address: ${NETWORK_BASE}.18
 
-  web:
-    container_name: web
+  webrahua:
+    container_name: webrahua
     build:
       context: ./config/nginx
       args:
@@ -82,11 +80,9 @@ services:
       - ./config/nginx/ssl:/etc/nginx/ssl
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-      - dhparam:/etc/ssl/certs
+      - ./config/dhparam:/etc/ssl/certs
       - sock:/sock
-      - type: volume
-        source: app_data
-        target: /home/${WEB_USER}/html
+      - ./src:/home/${WEB_USER}/html
     depends_on:
       - php
     networks:
@@ -99,11 +95,9 @@ services:
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-      - type: volume
-        source: app_data
-        target: /home/${WEB_USER}/html
+      - ./src:/home/${WEB_USER}/html
     depends_on:
-      - web
+      - webrahua
     command:
       [
         "certonly",
@@ -123,28 +117,6 @@ volumes:
   certbot-var:
   mysqldata:
   sock:
-    driver: local
-
-  backups:
-    driver: local
-    driver_opts:
-      type: none
-      device: "${ROOT_PROJECT}/config/mariadb/backups"
-      o: bind
-
-  app_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: "${ROOT_PROJECT}/src"
-      o: bind
-
-  dhparam:
-    driver: local
-    driver_opts:
-      type: none
-      device: "${ROOT_PROJECT}/config/dhparam"
-      o: bind
 
 networks:
   back:
