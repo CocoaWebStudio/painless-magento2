@@ -97,7 +97,7 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - ./src:/home/${WEB_USER}/html
     depends_on:
-      - webrahua
+      - web
     command:
       [
         "certonly",
