@@ -71,6 +71,7 @@ services:
       args:
         WEB_USER: ${WEB_USER}
         U_ID: ${U_ID}
+        PUBLIC_DIR: ${PUBLIC_DIR}
     ports:
       - "80:80"
       - "443:443"
