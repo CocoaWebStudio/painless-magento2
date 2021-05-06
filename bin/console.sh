@@ -310,7 +310,7 @@ installMagento() {
 build() {
   case "$2" in
     mage1)
-      sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g; s|\$PUBLIC_DIR|$PUBLIC_DIR|g; s|\$PUBLIC_DIR|$PUBLIC_DIR|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecureMage1.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
+      sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$WEB_USER|$WEB_USER|g; s|\$PUBLIC_DIR|$PUBLIC_DIR|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecureMage1.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
       ;;
     *)
     sed "s|\$MAGE_DOMAIN|$MAGE_DOMAIN|g; s|\$PUBLIC_DIR|$PUBLIC_DIR|g; s|\$WEB_USER|$WEB_USER|g" "$CONFIGFOLDER/nginx/templates/sites-enabled/unsecure.conf.template" >"$CONFIGFOLDER/nginx/sites-enabled/default.conf"
