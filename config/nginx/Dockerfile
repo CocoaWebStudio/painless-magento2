@@ -9,5 +9,3 @@ RUN addgroup -g $U_ID ${WEB_USER} \
   && mkdir -p /sock \
   && touch /sock/docker.sock \
   && chown -R ${WEB_USER}:${WEB_USER} /sock
-
-USER ${WEB_USER}
