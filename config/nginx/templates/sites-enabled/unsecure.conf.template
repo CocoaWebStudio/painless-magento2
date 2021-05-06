@@ -11,7 +11,7 @@ server {
 
     set                         $MAGE_ROOT /home/$WEB_USER/html;
 
-    root $MAGE_ROOT/pub;
+    root $MAGE_ROOT/$PUBLIC_DIR;
 
     index index.php;
     autoindex off;
