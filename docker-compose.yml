@@ -64,8 +64,8 @@ services:
       back:
         ipv4_address: ${NETWORK_BASE}.18
 
-  webrahua:
-    container_name: webrahua
+  web:
+    container_name: web
     build:
       context: ./config/nginx
       args:
